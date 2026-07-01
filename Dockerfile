@@ -29,8 +29,8 @@ RUN mkdir -p ~/.local/share/fnm \
     && curl -fsSL https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip -o /tmp/fnm-linux.zip \
     && unzip /tmp/fnm-linux.zip -d ~/.local/share/fnm \
     && rm /tmp/fnm-linux.zip \
-    && ~/.local/share/fnm/fnm install 22 \
-    && ~/.local/share/fnm/fnm default 22
+    && ~/.local/share/fnm/fnm install 24 \
+    && ~/.local/share/fnm/fnm default 24
 ENV PATH=/home/opencode/.local/share/fnm/aliases/default/bin:$PATH
 
 # Enable Corepack for pnpm and yarn (needs Node.js on PATH)

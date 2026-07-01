@@ -28,7 +28,7 @@ if [ -n "$SSH_PRIVATE_KEY" ]; then
         chmod 600 "$HOME/.ssh/id_ed25519"
 
         # Fix single-line SSH key format (header + body + footer on one line)
-        if grep -q '-----BEGIN.*-----.*-----END.*-----' "$HOME/.ssh/id_ed25519"; then
+        if grep -q -e '-----BEGIN.*-----.*-----END.*-----' "$HOME/.ssh/id_ed25519"; then
             KEY_CONTENT=$(cat "$HOME/.ssh/id_ed25519")
             HEADER=$(echo "$KEY_CONTENT" | sed 's/^\(-----BEGIN[^ ]* KEY-----\).*$/\1/')
             FOOTER=$(echo "$KEY_CONTENT" | sed 's/^.*\(-----END[^ ]* KEY-----\).*$/\1/')

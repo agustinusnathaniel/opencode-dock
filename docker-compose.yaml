@@ -17,6 +17,7 @@ services:
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
     volumes:
       - opencode-home:/home/opencode
+      - opencode-workspace:/home/opencode/workspace
     tmpfs:
       - /tmp
     dns:
@@ -43,3 +44,4 @@ services:
 
 volumes:
   opencode-home:
+  opencode-workspace:

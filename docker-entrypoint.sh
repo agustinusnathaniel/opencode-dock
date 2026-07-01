@@ -1,4 +1,5 @@
 #!/bin/bash
+# This file must live outside $HOME (not shadowed by opencode-home volume)
 set -e
 
 # --- OpenCode provider auth ---

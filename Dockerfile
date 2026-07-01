@@ -14,9 +14,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Create non-root user
 RUN useradd -m -s /bin/bash opencode
 
-# Copy entrypoint and make executable
-COPY docker-entrypoint.sh /home/opencode/docker-entrypoint.sh
-RUN chmod +x /home/opencode/docker-entrypoint.sh
+# Copy entrypoint to system path (outside home volume)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Switch to opencode user for all subsequent commands
 USER opencode
@@ -50,9 +50,9 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
     && ~/.local/bin/rtk init -g --opencode 2>/dev/null || true
 ENV PATH=/home/opencode/.local/bin:$PATH
 
-# Install CodeGraph
+# Install CodeGraph, Tokscale, and opencode-wakatime
 RUN --mount=type=cache,target=/home/opencode/.npm,uid=1000,gid=1000,sharing=locked \
-    npm install -g @colbymchenry/codegraph
+    npm install -g @colbymchenry/codegraph tokscale opencode-wakatime
 
 # Create config/data directories
 RUN mkdir -p ~/.config/opencode ~/.local/share/opencode
@@ -64,5 +64,5 @@ EXPOSE 4096
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f http://localhost:4096/global/health || exit 1
 
-ENTRYPOINT ["/home/opencode/docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["opencode", "web", "--hostname", "0.0.0.0", "--port", "4096"]

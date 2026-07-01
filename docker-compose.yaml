@@ -16,10 +16,7 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
     volumes:
-      - opencode-data:/home/opencode/.local/share/opencode
-      - opencode-config:/home/opencode/.config/opencode
-      - opencode-workspace:/home/opencode/workspace
-      - opencode-wakatime:/home/opencode/.wakatime
+      - opencode-home:/home/opencode
     tmpfs:
       - /tmp
     dns:
@@ -45,7 +42,4 @@ services:
       start_period: 15s
 
 volumes:
-  opencode-data:
-  opencode-config:
-  opencode-workspace:
-  opencode-wakatime:
+  opencode-home:

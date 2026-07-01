@@ -30,11 +30,13 @@ RUN mkdir -p ~/.local/share/fnm \
     && unzip /tmp/fnm-linux.zip -d ~/.local/share/fnm \
     && rm /tmp/fnm-linux.zip \
     && ~/.local/share/fnm/fnm install 22 \
-    && ~/.local/share/fnm/fnm default 22 \
-    && corepack enable \
+    && ~/.local/share/fnm/fnm default 22
+ENV PATH=/home/opencode/.local/share/fnm/aliases/default/bin:$PATH
+
+# Enable Corepack for pnpm and yarn (needs Node.js on PATH)
+RUN corepack enable \
     && corepack prepare pnpm@11.9.0 --activate \
     && corepack prepare yarn@4.17.0 --activate
-ENV PATH=/home/opencode/.local/share/fnm/aliases/default/bin:$PATH
 
 # Install Bun
 RUN curl -fsSL https://bun.sh/install | bash

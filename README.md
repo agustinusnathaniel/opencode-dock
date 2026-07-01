@@ -41,6 +41,16 @@ The container runs with a 4GB memory / 2 CPU limit. Adjust in Coolify's UI if ne
 
 Coolify will pull the repo, build the Docker image, and start the container. The first build downloads the OpenCode binary and may take a minute.
 
+## Included Tools
+
+The Docker image ships with these tools pre-installed:
+
+- **Runtime:** Node.js 22 (via fnm), Bun
+- **Package managers:** npm, pnpm, yarn (via Corepack)
+- **Version control:** git, openssh-client, gh CLI
+- **Code intelligence:** CodeGraph (`codegraph`), Rust Token Killer (`rtk`)
+- **Build tools:** build-essential (gcc, g++, make, procps)
+
 ## Environment Variables
 
 See `.env.example` for the full list with descriptions. The ones you need to care about:
@@ -94,9 +104,39 @@ If you want agents to push code to or pull code from GitHub or GitLab, they need
    ```bash
    ssh-keygen -t ed25519 -C "opencode@server" -f ~/.ssh/opencode_deploy_key
    ```
-2. Add the public key to your GitHub account (Settings > SSH and GPG keys > New SSH key).
-3. Copy the private key contents and set them as the `SSH_PRIVATE_KEY` environment variable in Coolify. Replace actual newlines with `\n` so the key fits in a single env var value.
+2. Add the **public key** to your GitHub account:
+   ```bash
+   cat ~/.ssh/opencode_deploy_key.pub
+   # Copy the output, then go to GitHub → Settings → SSH and GPG keys → New SSH key
+   ```
+3. Add the **private key** as an environment variable in Coolify. Paste the full key verbatim (with newlines) into the `SSH_PRIVATE_KEY` field:
+   ```bash
+   cat ~/.ssh/opencode_deploy_key
+   # Copy the entire multi-line output into Coolify
+   ```
 4. Set `GIT_USER_NAME` and `GIT_USER_EMAIL` so agent commits are attributed to someone identifiable.
+
+The entrypoint handles both multi-line and `\n`-escaped formats, so paste it as-is.
+
+## GitHub CLI Token (Optional)
+
+If you want agents to use the `gh` CLI (create PRs, manage issues, trigger workflows), add a GitHub personal access token:
+
+1. Go to GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens
+2. Generate a token with the permissions your agents need (repo, issues, pull requests)
+3. Add it as the `GITHUB_TOKEN` environment variable in Coolify
+
+The `gh` CLI autodetects this variable and authenticates automatically.
+
+## Post-Deployment Tools
+
+These tools are not baked into the Docker image but can be installed in your first session. Since the config volume persists across restarts, you only need to do this once.
+
+| Tool | Purpose | Install command |
+|------|---------|----------------|
+| [Maestria](https://maestria.sznm.dev/) | Agent workflow patterns (8 specialists, pipeline orchestration) | `opencode plugin @maestria/opencode@latest -g` |
+| [opencode-wakatime](https://github.com/angristan/opencode-wakatime) | Track AI coding activity in your WakaTime dashboard | `npm i -g opencode-wakatime` then add `"plugin": ["opencode-wakatime"]` to `~/.config/opencode/opencode.json` and create `~/.wakatime.cfg` with your API key |
+| [Tokscale](https://github.com/junhoyeo/tokscale) | Token usage and cost dashboard for AI coding tools | `npm i -g tokscale` or use `npx tokscale@latest` |
 
 ## Security Notes
 

@@ -44,6 +44,14 @@ ENV PATH=/home/opencode/.bun/bin:$PATH
 RUN curl -fsSL https://opencode.ai/install | bash -s -- ${OPENCODE_VERSION}
 ENV PATH=/home/opencode/.opencode/bin:$PATH
 
+# Install RTK (Rust Token Killer) - compresses command output, saves 60-90% tokens
+RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
+    && ~/.local/bin/rtk init -g --opencode 2>/dev/null || true
+ENV PATH=/home/opencode/.local/bin:$PATH
+
+# Install CodeGraph - code intelligence / knowledge graph
+RUN npm install -g @colbymchenry/codegraph
+
 # Create config/data directories
 RUN mkdir -p ~/.config/opencode ~/.local/share/opencode
 

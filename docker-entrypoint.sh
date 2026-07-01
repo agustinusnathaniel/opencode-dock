@@ -36,7 +36,7 @@ git config --global core.editor "vim"
 # --- Source fnm and bun for interactive shells ---
 # Create .bashrc with proper PATH for interactive use
 cat > "$HOME/.bashrc" << 'BASHRCEOF'
-export PATH="$HOME/.opencode/bin:$HOME/.local/share/fnm/aliases/default/bin:$HOME/.bun/bin:$PATH"
+export PATH="$HOME/.opencode/bin:$HOME/.local/share/fnm/aliases/default/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF

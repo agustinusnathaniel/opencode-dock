@@ -15,6 +15,7 @@ services:
       - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
+      - WAKATIME_HOME=/home/opencode/.local/share/wakatime
     volumes:
       - opencode-config:/home/opencode/.config
       - opencode-local-share:/home/opencode/.local/share

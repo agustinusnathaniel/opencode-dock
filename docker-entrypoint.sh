@@ -68,7 +68,8 @@ git config --global core.editor "vim"
 
 # --- WakaTime config ---
 if [ -n "$WAKATIME_API_KEY" ]; then
-    mkdir -p "$HOME/.wakatime"
+    WAKATIME_HOME="${WAKATIME_HOME:-$HOME/.wakatime}"
+    mkdir -p "$WAKATIME_HOME"
     cat > "$HOME/.wakatime.cfg" << EOF
 [settings]
 api_key = ${WAKATIME_API_KEY}

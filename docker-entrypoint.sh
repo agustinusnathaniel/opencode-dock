@@ -70,19 +70,28 @@ git config --global core.editor "vim"
 if [ -n "$WAKATIME_API_KEY" ]; then
     WAKATIME_HOME="${WAKATIME_HOME:-$HOME/.wakatime}"
     mkdir -p "$WAKATIME_HOME"
-    cat > "$HOME/.wakatime.cfg" << EOF
+    # Only write config if it doesn't exist (preserves WakaTime internal state)
+    if [ ! -f "$HOME/.wakatime.cfg" ]; then
+        cat > "$HOME/.wakatime.cfg" << EOF
 [settings]
 api_key = ${WAKATIME_API_KEY}
 EOF
+    fi
 fi
 
 # --- Source fnm and bun for interactive shells ---
-# Create .bashrc with proper PATH for interactive use
-cat > "$HOME/.bashrc" << 'BASHRCEOF'
+# Append PATH entries to .bashrc if not already present
+# (Debian's useradd -m copies /etc/skel/.bashrc, so it always exists)
+PROFILE_FILE="$HOME/.bashrc"
+if [ -f "$PROFILE_FILE" ] && ! grep -q "opencode_env" "$PROFILE_FILE" 2>/dev/null; then
+    cat >> "$PROFILE_FILE" << 'BASHRCEOF'
+
+# OpenCode environment
 export PATH="$HOME/.opencode/bin:/opt/fnm/aliases/default/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF
+fi
 
 # --- Ensure workspace directory exists and is writable ---
 mkdir -p "$HOME/workspace" 2>/dev/null || true

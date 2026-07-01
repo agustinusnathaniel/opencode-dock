@@ -59,7 +59,8 @@ ENV PATH=/home/opencode/.local/bin:$PATH
 
 # Install CodeGraph, Tokscale, and opencode-wakatime
 RUN --mount=type=cache,target=/home/opencode/.npm,uid=1000,gid=1000,sharing=locked \
-    npm install -g @colbymchenry/codegraph tokscale opencode-wakatime
+    npm install -g @colbymchenry/codegraph tokscale opencode-wakatime \
+    && codegraph install --yes --target=opencode 2>/dev/null || true
 
 # Create config/data directories
 RUN mkdir -p ~/.config/opencode ~/.local/share/opencode

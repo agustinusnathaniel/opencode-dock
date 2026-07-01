@@ -28,9 +28,16 @@ if [ -n "$SSH_PRIVATE_KEY" ]; then
 
         # Fix single-line SSH key format (header + body + footer on one line)
         if grep -q '-----BEGIN.*-----.*-----END.*-----' "$HOME/.ssh/id_ed25519"; then
-            sed -i 's/-----BEGIN/\n&/' "$HOME/.ssh/id_ed25519"
-            sed -i 's/-----END/\n&/' "$HOME/.ssh/id_ed25519"
-            sed -i '/^$/d' "$HOME/.ssh/id_ed25519"
+            KEY_CONTENT=$(cat "$HOME/.ssh/id_ed25519")
+            HEADER=$(echo "$KEY_CONTENT" | sed 's/^\(-----BEGIN[^ ]* KEY-----\).*$/\1/')
+            FOOTER=$(echo "$KEY_CONTENT" | sed 's/^.*\(-----END[^ ]* KEY-----\).*$/\1/')
+            BODY=$(echo "$KEY_CONTENT" | sed 's/^.*-----BEGIN[^ ]* KEY----- *//' | sed 's/ *-----END[^ ]* KEY-----.*$//' | tr -d '[:space:]')
+            {
+                echo "$HEADER"
+                echo "$BODY" | fold -w 64
+                echo "$FOOTER"
+            } > "$HOME/.ssh/id_ed25519"
+            chmod 600 "$HOME/.ssh/id_ed25519"
         fi
 
         # Pre-accept host keys for common git hosts

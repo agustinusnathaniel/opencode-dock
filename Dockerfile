@@ -1,11 +1,9 @@
-ARG OPENCODE_VERSION=1.17.13
-
 FROM debian:bookworm-slim
 
-ARG OPENCODE_VERSION
-
-# Install system packages and GitHub CLI
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system packages and GitHub CLI (stable, rarely changes)
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates git openssh-client \
     unzip xz-utils build-essential procps \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
@@ -33,7 +31,7 @@ RUN mkdir -p ~/.local/share/fnm \
     && ~/.local/share/fnm/fnm default 24
 ENV PATH=/home/opencode/.local/share/fnm/aliases/default/bin:$PATH
 
-# Enable Corepack for pnpm and yarn (needs Node.js on PATH)
+# Enable Corepack for pnpm and yarn
 RUN corepack enable \
     && corepack prepare pnpm@11.9.0 --activate \
     && corepack prepare yarn@4.17.0 --activate
@@ -42,17 +40,19 @@ RUN corepack enable \
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH=/home/opencode/.bun/bin:$PATH
 
-# Install OpenCode
+# Install OpenCode (version bumps only bust cache from here)
+ARG OPENCODE_VERSION=1.17.13
 RUN curl -fsSL https://opencode.ai/install | bash -s -- ${OPENCODE_VERSION}
 ENV PATH=/home/opencode/.opencode/bin:$PATH
 
-# Install RTK (Rust Token Killer) - compresses command output, saves 60-90% tokens
+# Install RTK (Rust Token Killer)
 RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
     && ~/.local/bin/rtk init -g --opencode 2>/dev/null || true
 ENV PATH=/home/opencode/.local/bin:$PATH
 
-# Install CodeGraph - code intelligence / knowledge graph
-RUN npm install -g @colbymchenry/codegraph
+# Install CodeGraph
+RUN --mount=type=cache,target=/home/opencode/.npm,uid=1000,gid=1000,sharing=locked \
+    npm install -g @colbymchenry/codegraph
 
 # Create config/data directories
 RUN mkdir -p ~/.config/opencode ~/.local/share/opencode

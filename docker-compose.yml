@@ -1,0 +1,32 @@
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OPENCODE_VERSION: 1.17.13
+    environment:
+      - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD}
+      - OPENCODE_SERVER_USERNAME=${OPENCODE_SERVER_USERNAME:-opencode}
+      - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY}
+      - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY}
+    volumes:
+      - opencode-data:/home/opencode/.local/share/opencode
+      - opencode-config:/home/opencode/.config/opencode
+      # optional, for git push/pull from genesis:
+      # - ~/.ssh/opencode_deploy_key:/home/opencode/.ssh/id_ed25519:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    depends_on:
+      - opencode
+
+volumes:
+  opencode-data:
+  opencode-config:

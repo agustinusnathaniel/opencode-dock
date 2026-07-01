@@ -19,25 +19,27 @@ fi
 
 # --- SSH key setup ---
 if [ -n "$SSH_PRIVATE_KEY" ]; then
-    mkdir -p "$HOME/.ssh"
-    printf '%s\n' "$SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' > "$HOME/.ssh/id_ed25519"
-    chmod 600 "$HOME/.ssh/id_ed25519"
+    mkdir -p "$HOME/.ssh" 2>/dev/null || true
+    if ! printf '%s\n' "$SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' > "$HOME/.ssh/id_ed25519" 2>/dev/null; then
+        echo "WARNING: Cannot write to ~/.ssh/. Check volume permissions."
+        echo "        SSH key not injected."
+    else
+        chmod 600 "$HOME/.ssh/id_ed25519"
 
-    # Pre-accept host keys for common git hosts
-    ssh-keyscan github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
-    ssh-keyscan gitlab.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
-    ssh-keyscan bitbucket.org >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+        # Pre-accept host keys for common git hosts
+        ssh-keyscan github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+        ssh-keyscan gitlab.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
+        ssh-keyscan bitbucket.org >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
 
-    # SSH config for strict host key checking
-    cat > "$HOME/.ssh/config" << 'CONFIGEOF'
+        # SSH config for strict host key checking
+        cat > "$HOME/.ssh/config" << 'CONFIGEOF'
 Host github.com gitlab.com bitbucket.org
     IdentityFile ~/.ssh/id_ed25519
     StrictHostKeyChecking accept-new
 CONFIGEOF
-    chmod 600 "$HOME/.ssh/config"
-
-    # Ensure .ssh directory has correct permissions
-    chmod 700 "$HOME/.ssh"
+        chmod 600 "$HOME/.ssh/config"
+        chmod 700 "$HOME/.ssh"
+    fi
 fi
 
 # --- Git config ---

@@ -20,7 +20,6 @@ services:
       - opencode-config:/home/opencode/.config/opencode
       - opencode-workspace:/home/opencode/workspace
       - opencode-wakatime:/home/opencode/.wakatime
-      - opencode-ssh:/home/opencode/.ssh
     tmpfs:
       - /tmp
     dns:
@@ -50,4 +49,3 @@ volumes:
   opencode-config:
   opencode-workspace:
   opencode-wakatime:
-  opencode-ssh:

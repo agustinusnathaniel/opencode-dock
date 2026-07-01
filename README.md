@@ -24,11 +24,19 @@ Coolify Proxy (Caddy/Traefik + Let's Encrypt SSL)
   | HTTP (internal)
   v
 OpenCode Server (port 4096, inside Docker)
+  |
+  | Entrypoint: /usr/local/bin/docker-entrypoint.sh
+  |  • Injects SSH key from SSH_PRIVATE_KEY env var
+  |  • Writes provider keys to auth.json (OPENCODE_GO_API_KEY / ZEN_API_KEY)
+  |  • Configures git identity (GIT_USER_NAME / GIT_USER_EMAIL)
+  |  • Sets up WakaTime config (WAKATIME_API_KEY)
+  |  • Formats single-line SSH keys into proper multi-line format
 ```
 
 Traffic flows from your device through Cloudflare's proxy (which hides your VPS IP), then to Coolify's reverse proxy (which handles SSL termination), then to the OpenCode container.
 
-The container runs with a 4GB memory / 2 CPU limit. Adjust in Coolify's UI if needed.
+The container runs with a 4GB memory / 2 CPU limit and explicit DNS (1.1.1.1, 8.8.8.8).
+Adjust in Coolify's UI if needed.
 
 ## Deploying in Coolify
 
@@ -45,11 +53,29 @@ Coolify will pull the repo, build the Docker image, and start the container. The
 
 The Docker image ships with these tools pre-installed:
 
-- **Runtime:** Node.js 22 (via fnm), Bun
-- **Package managers:** npm, pnpm, yarn (via Corepack)
+- **Runtime:** Node.js 24 (via fnm at `/opt/fnm`), Bun
+- **Package managers:** npm, pnpm 11.9.0, yarn 4.17.0 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph`), Rust Token Killer (`rtk`)
-- **Build tools:** build-essential (gcc, g++, make, procps)
+- **AI coding tools:** Tokscale (`tokscale`), WakaTime plugin (`opencode-wakatime`)
+- **Build tools:** build-essential (gcc, g++, make), procps, xdg-utils
+
+## Persistent Volumes
+
+Runtime data persists across restarts through four named volumes:
+
+| Volume | Mount | Covers |
+|--------|-------|-------|
+| `opencode-config` | `~/.config/` | OpenCode config, Maestria plugins, Tokscale credentials, RTK config, git config |
+| `opencode-local-share` | `~/.local/share/` | OpenCode sessions, provider auth (auth.json), Tokscale cache |
+| `opencode-workspace` | `~/workspace/` | Projects cloned by agents |
+| `opencode-agents` | `~/.agents/` | Global agent skills |
+
+Tool binaries (Node, Bun, OpenCode, CodeGraph, etc.) are installed system-wide at `/opt/` or
+`/usr/local/` — never in the home directory — so they always come fresh from the image on rebuild.
+
+To reset tool versions after an image update, delete the volume and redeploy. The workspace
+volume is separate and survives.
 
 ## Environment Variables
 
@@ -58,13 +84,14 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `OPENCODE_SERVER_PASSWORD` | Yes | Password for the web UI and API. Set a strong one. |
-| `OPENCODE_GO_API_KEY` | Yes | API key for the model provider agents will use. |
-| `SSH_PRIVATE_KEY` | No | Private key for agents to push/pull code. |
+| `OPENCODE_GO_API_KEY` | Yes | API key for the OpenCode Go provider. |
+| `OPENCODE_ZEN_API_KEY` | No | Falls back to `OPENCODE_GO_API_KEY` if not set. Same key works for both. |
+| `SSH_PRIVATE_KEY` | No | Private key for agents to push/pull code. Supports single-line and multi-line formats. |
 | `GIT_USER_NAME` | No | Git author name for agent commits. |
 | `GIT_USER_EMAIL` | No | Git author email for agent commits. |
+| `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
+| `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
 | `OPENCODE_SERVER_USERNAME` | No | HTTP basic auth username (default: `opencode`). |
-| `PNPM_VERSION` | No | pnpm version (default: 10.10.0). |
-| `YARN_VERSION` | No | Yarn version (default: 4.9.1). |
 
 ## Updating OpenCode
 
@@ -109,10 +136,11 @@ If you want agents to push code to or pull code from GitHub or GitLab, they need
    cat ~/.ssh/opencode_deploy_key.pub
    # Copy the output, then go to GitHub → Settings → SSH and GPG keys → New SSH key
    ```
-3. Add the **private key** as an environment variable in Coolify. Paste the full key verbatim (with newlines) into the `SSH_PRIVATE_KEY` field:
+3. Add the **private key** as an environment variable in Coolify. You can paste the key
+   either as a single line or multi-line — the entrypoint handles both formats:
    ```bash
    cat ~/.ssh/opencode_deploy_key
-   # Copy the entire multi-line output into Coolify
+   # Copy the entire output into Coolify's SSH_PRIVATE_KEY field
    ```
 4. Set `GIT_USER_NAME` and `GIT_USER_EMAIL` so agent commits are attributed to someone identifiable.
 
@@ -145,6 +173,8 @@ These tools are not baked into the Docker image but can be installed in your fir
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
 - No container ports are exposed beyond what Coolify's reverse proxy handles.
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
+- Persistent volumes only store user config and data, never tool binaries.
+  Tool binaries come fresh from the image on every build.
 
 ## Credits
 

@@ -22,14 +22,15 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 USER opencode
 ENV HOME=/home/opencode
 
-# Install Node.js via FNM
-RUN mkdir -p ~/.local/share/fnm \
+# Install Node.js via FNM (system-wide, outside home volume)
+ENV FNM_DIR=/opt/fnm
+RUN mkdir -p ${FNM_DIR} \
     && curl -fsSL https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip -o /tmp/fnm-linux.zip \
-    && unzip /tmp/fnm-linux.zip -d ~/.local/share/fnm \
+    && unzip /tmp/fnm-linux.zip -d ${FNM_DIR} \
     && rm /tmp/fnm-linux.zip \
-    && ~/.local/share/fnm/fnm install 24 \
-    && ~/.local/share/fnm/fnm default 24
-ENV PATH=/home/opencode/.local/share/fnm/aliases/default/bin:$PATH
+    && ${FNM_DIR}/fnm install 24 \
+    && ${FNM_DIR}/fnm default 24
+ENV PATH=/opt/fnm/aliases/default/bin:$PATH
 
 # Enable Corepack for pnpm and yarn
 RUN corepack enable \

@@ -26,6 +26,9 @@ RUN mkdir -p ${FNM_DIR} \
     && ${FNM_DIR}/fnm default 24 \
     && chown -R opencode:opencode ${FNM_DIR}
 
+# Pre-create workspace directory for volume permissions
+RUN mkdir -p /home/opencode/workspace && chown opencode:opencode /home/opencode/workspace
+
 # Copy entrypoint to system path (outside home volume)
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

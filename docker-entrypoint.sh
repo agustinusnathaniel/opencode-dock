@@ -83,8 +83,19 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF
 
-# --- Ensure workspace directory exists ---
-mkdir -p "$HOME/workspace"
+# --- Ensure workspace directory exists and is writable ---
+mkdir -p "$HOME/workspace" 2>/dev/null || true
+if ! touch "$HOME/workspace/.write-test" 2>/dev/null; then
+    # Workspace volume has wrong owner (root). Fix if possible.
+    chmod 777 "$HOME/workspace" 2>/dev/null || true
+    if ! touch "$HOME/workspace/.write-test" 2>/dev/null; then
+        echo "WARNING: ~/workspace/ is not writable (volume permission issue)."
+        echo "        Run this on your VPS to fix:"
+        echo "        docker exec -u 0 <container> chown opencode:opencode /home/opencode/workspace"
+    fi
+else
+    rm -f "$HOME/workspace/.write-test"
+fi
 
 # --- Execute the main command ---
 exec "$@"

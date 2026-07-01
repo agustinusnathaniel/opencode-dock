@@ -11,8 +11,20 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && apt-get update && apt-get install -y gh \
     && rm -rf /var/lib/apt/lists/*
 
+# Set FNM directory early (before USER switch, so root can create it)
+ENV FNM_DIR=/opt/fnm
+
 # Create non-root user
 RUN useradd -m -s /bin/bash opencode
+
+# Install Node.js via FNM (system-wide, as root)
+RUN mkdir -p ${FNM_DIR} \
+    && curl -fsSL https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip -o /tmp/fnm-linux.zip \
+    && unzip /tmp/fnm-linux.zip -d ${FNM_DIR} \
+    && rm /tmp/fnm-linux.zip \
+    && ${FNM_DIR}/fnm install 24 \
+    && ${FNM_DIR}/fnm default 24 \
+    && chown -R opencode:opencode ${FNM_DIR}
 
 # Copy entrypoint to system path (outside home volume)
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -21,15 +33,6 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Switch to opencode user for all subsequent commands
 USER opencode
 ENV HOME=/home/opencode
-
-# Install Node.js via FNM (system-wide, outside home volume)
-ENV FNM_DIR=/opt/fnm
-RUN mkdir -p ${FNM_DIR} \
-    && curl -fsSL https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip -o /tmp/fnm-linux.zip \
-    && unzip /tmp/fnm-linux.zip -d ${FNM_DIR} \
-    && rm /tmp/fnm-linux.zip \
-    && ${FNM_DIR}/fnm install 24 \
-    && ${FNM_DIR}/fnm default 24
 ENV PATH=/opt/fnm/aliases/default/bin:$PATH
 
 # Enable Corepack for pnpm and yarn

@@ -9,13 +9,18 @@ services:
       - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD:?error}
       - OPENCODE_SERVER_USERNAME=${OPENCODE_SERVER_USERNAME:-opencode}
       - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY:?error}
+      - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY:-}
       - SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY:-}
       - GIT_USER_NAME=${GIT_USER_NAME:-}
       - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
     volumes:
       - opencode-data:/home/opencode/.local/share/opencode
       - opencode-config:/home/opencode/.config/opencode
+      - opencode-workspace:/home/opencode/workspace
+      - opencode-wakatime:/home/opencode/.wakatime
+      - opencode-ssh:/home/opencode/.ssh
     tmpfs:
       - /tmp
     dns:
@@ -43,3 +48,6 @@ services:
 volumes:
   opencode-data:
   opencode-config:
+  opencode-workspace:
+  opencode-wakatime:
+  opencode-ssh:

@@ -26,6 +26,13 @@ if [ -n "$SSH_PRIVATE_KEY" ]; then
     else
         chmod 600 "$HOME/.ssh/id_ed25519"
 
+        # Fix single-line SSH key format (header + body + footer on one line)
+        if grep -q '-----BEGIN.*-----.*-----END.*-----' "$HOME/.ssh/id_ed25519"; then
+            sed -i 's/-----BEGIN/\n&/' "$HOME/.ssh/id_ed25519"
+            sed -i 's/-----END/\n&/' "$HOME/.ssh/id_ed25519"
+            sed -i '/^$/d' "$HOME/.ssh/id_ed25519"
+        fi
+
         # Pre-accept host keys for common git hosts
         ssh-keyscan github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
         ssh-keyscan gitlab.com >> "$HOME/.ssh/known_hosts" 2>/dev/null || true

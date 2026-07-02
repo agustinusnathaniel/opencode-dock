@@ -9,6 +9,7 @@ This directory contains Architecture Decision Records (ADRs) for the my-remote-o
 | [0003](0003-package-manager-strategy.md) | Use Corepack for pnpm and yarn | Accepted |
 | [0004](0004-container-security-posture.md) | Container Security Posture | Accepted |
 | [0005](0005-dev-tools-strategy.md) | Dev Tools Inclusion Strategy | Accepted |
+| [0006](0006-volume-strategy.md) | Container Volume Strategy | Accepted |
 
 ## Status Meanings
 

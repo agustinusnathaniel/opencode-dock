@@ -87,7 +87,7 @@ if [ -f "$PROFILE_FILE" ] && ! grep -q "opencode_env" "$PROFILE_FILE" 2>/dev/nul
     cat >> "$PROFILE_FILE" << 'BASHRCEOF'
 
 # OpenCode environment
-export PATH="$HOME/.opencode/bin:/opt/fnm/aliases/default/bin:$HOME/.bun/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/.opencode/bin:/opt/fnm/aliases/default/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF

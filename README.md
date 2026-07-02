@@ -53,12 +53,12 @@ Coolify will pull the repo, build the Docker image, and start the container. The
 
 The Docker image ships with these tools pre-installed:
 
-- **Runtime:** Node.js 24 (via fnm at `/opt/fnm`), Bun
+- **Runtime:** Node.js 24 (via fnm at `/opt/fnm`)
 - **Package managers:** npm, pnpm 11.9.0, yarn 4.17.0 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph`), Rust Token Killer (`rtk`)
 - **AI coding tools:** Tokscale (`tokscale`), WakaTime plugin (`opencode-wakatime`)
-- **Build tools:** build-essential (gcc, g++, make), procps, xdg-utils
+- **System tools:** procps, xdg-utils
 
 ## Persistent Volumes
 
@@ -66,16 +66,14 @@ Runtime data persists across restarts through four named volumes:
 
 | Volume | Mount | Covers |
 |--------|-------|-------|
-| `opencode-config` | `~/.config/` | OpenCode config, Maestria plugins, Tokscale credentials, RTK config, git config |
-| `opencode-local-share` | `~/.local/share/` | OpenCode sessions, provider auth (auth.json), Tokscale cache |
-| `opencode-workspace` | `~/workspace/` | Projects cloned by agents |
-| `opencode-agents` | `~/.agents/` | Global agent skills |
+| `opencode-home` | `/home/opencode` | Everything: config, data, cache, agents, auth tokens |
+| `opencode-workspace` | `/home/opencode/workspace` | Projects (survives home volume wipes) |
 
-Tool binaries (Node, Bun, OpenCode, CodeGraph, etc.) are installed system-wide at `/opt/` or
-`/usr/local/` — never in the home directory — so they always come fresh from the image on rebuild.
+Tool binaries live at `/opt/fnm/` (Node.js) and `/usr/local/bin/` (entrypoint) —
+outside the home volume so they never get shadowed.
 
-To reset tool versions after an image update, delete the volume and redeploy. The workspace
-volume is separate and survives.
+On tool version upgrades, delete `opencode-home` before redeploying to get
+fresh binaries. The workspace volume is unaffected.
 
 ## Environment Variables
 

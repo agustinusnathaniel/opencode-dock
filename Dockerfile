@@ -5,7 +5,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates git openssh-client \
-    unzip xz-utils build-essential procps xdg-utils \
+    unzip xz-utils procps xdg-utils \
     && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
     && apt-get update && apt-get install -y gh \
@@ -42,10 +42,6 @@ ENV PATH=/opt/fnm/aliases/default/bin:$PATH
 RUN corepack enable \
     && corepack prepare pnpm@11.9.0 --activate \
     && corepack prepare yarn@4.17.0 --activate
-
-# Install Bun
-RUN curl -fsSL https://bun.sh/install | bash
-ENV PATH=/home/opencode/.bun/bin:$PATH
 
 # Install OpenCode (version bumps only bust cache from here)
 ARG OPENCODE_VERSION=1.17.13

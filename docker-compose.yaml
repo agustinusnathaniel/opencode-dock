@@ -17,11 +17,8 @@ services:
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
       - WAKATIME_HOME=/home/opencode/.local/share/wakatime
     volumes:
-      - opencode-config:/home/opencode/.config
-      - opencode-local-share:/home/opencode/.local/share
+      - opencode-home:/home/opencode
       - opencode-workspace:/home/opencode/workspace
-      - opencode-agents:/home/opencode/.agents
-      - opencode-cache:/home/opencode/.cache
     tmpfs:
       - /tmp
     dns:
@@ -47,8 +44,5 @@ services:
       start_period: 15s
 
 volumes:
-  opencode-config:
-  opencode-local-share:
+  opencode-home:
   opencode-workspace:
-  opencode-agents:
-  opencode-cache:

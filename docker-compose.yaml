@@ -21,7 +21,7 @@ services:
       - opencode-local-share:/home/opencode/.local/share
       - opencode-workspace:/home/opencode/workspace
       - opencode-agents:/home/opencode/.agents
-      - opencode-cache:/home/opencode/.cache/opencode
+      - opencode-cache:/home/opencode/.cache
     tmpfs:
       - /tmp
     dns:

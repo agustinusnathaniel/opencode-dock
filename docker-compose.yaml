@@ -31,8 +31,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
-          cpus: "2"
+          memory: 6G
+          cpus: "4"
     restart: unless-stopped
     ports:
       - 4096:4096

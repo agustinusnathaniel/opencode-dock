@@ -66,7 +66,7 @@ WORKDIR /home/opencode
 EXPOSE 4096
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f http://localhost:4096/api/health || exit 1
+  CMD curl -f -u "${OPENCODE_SERVER_USERNAME:-opencode}:${OPENCODE_SERVER_PASSWORD}" http://localhost:4096/api/health
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["opencode", "web", "--hostname", "0.0.0.0", "--port", "4096"]

@@ -79,7 +79,9 @@ EOF
     fi
 fi
 
-# --- Auto-approve permissions for headless/web mode ---
+# --- Auto-approve permissions for headless mode ---
+# Simple "permission": "allow" only overrides some tool defaults (read, edit, etc.)
+# but NOT bash/shell commands. Must use per-tool granular config.
 CONFIG_FILE="$HOME/.config/opencode/opencode.jsonc"
 mkdir -p "$(dirname "$CONFIG_FILE")"
 node -e '
@@ -87,10 +89,22 @@ node -e '
     const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
     let config = {};
     try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
-    if (config.permission !== "allow") {
-        config.permission = "allow";
+    if (config.permission !== "allow" && JSON.stringify(config.permission) !== JSON.stringify({
+        read: "allow", edit: "allow", glob: "allow", grep: "allow",
+        list: "allow", bash: "allow", task: "allow",
+        external_directory: "allow", todowrite: "allow", question: "allow",
+        webfetch: "allow", websearch: "allow", lsp: "allow",
+        doom_loop: "allow", skill: "allow"
+    })) {
+        config.permission = {
+            read: "allow", edit: "allow", glob: "allow", grep: "allow",
+            list: "allow", bash: "allow", task: "allow",
+            external_directory: "allow", todowrite: "allow", question: "allow",
+            webfetch: "allow", websearch: "allow", lsp: "allow",
+            doom_loop: "allow", skill: "allow"
+        };
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
-        console.log("Set permission: allow in opencode config");
+        console.log("Set per-tool permission: allow in opencode config");
     }
 '
 

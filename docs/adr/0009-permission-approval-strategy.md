@@ -1,4 +1,4 @@
-# ADR-0009: Auto-Approve Permissions via CLI `--auto` Flag (with Config Fallback)
+# ADR-0009: Granular Per-Tool Permission Config for Headless Mode
 
 ## Status
 
@@ -8,82 +8,69 @@ Accepted (revised)
 
 OpenCode prompts for permission before executing potentially sensitive actions (file edits, shell commands, web requests, etc.). For a remote server where the developer trusts their own agents, these prompts are unnecessary friction.
 
-Two approaches are available for auto-approving permissions:
+Two approaches were evaluated:
 
-1. **CLI `--auto` flag** — A **global** flag (works on ALL subcommands: `serve`, `web`, `run`, TUI) that tells OpenCode to "auto-approve permissions that are not explicitly denied"
-2. **Config-based permission setting** — The OpenCode configuration schema supports a top-level `"permission"` field set to `"allow"`, `"ask"`, or `"deny"`, with granular per-action overrides
+1. **CLI `--auto` flag** — Presented as a global option in `opencode --help`, but only works with the default TUI mode (`opencode --auto`). It is **not accepted** by `opencode serve` (unknown flag → help displayed, server exits). It also cannot be placed before `serve` (`opencode --auto serve ...`) because the parser then treats `serve` as a positional project path argument.
 
-## Decision Drivers
+2. **Config-based permission setting** — The OpenCode config schema (`https://opencode.ai/config.json`) supports a `"permission"` key
+   with two forms:
+   - Simple string: `"ask"`, `"allow"`, or `"deny"` (global default)
+   - Per-tool object: granular control per action type
 
-- **Must work with `opencode serve`** — The chosen server mode
-- **Persistent across restarts** — Setting should survive container restarts
-- **Simple and auditable** — Easy to understand what's configured
+## Key Finding
 
-## The Fix: CLI `--auto` Flag
+The simple `"permission": "allow"` string **only overrides certain tool defaults** — `read`, `edit`, `grep`, `task`, `todowrite` get set to `allow`, but **`bash` (shell commands) remains at `ask`**. This was confirmed in OpenCode's debug logs:
 
-The `--auto` flag is a **global flag** parsed by the root `opencode` command, not a subcommand-specific flag. It works with ALL modes:
-
-```bash
-opencode serve --auto --hostname 0.0.0.0 --port 4096   # ✓ works
-opencode web --auto --hostname 0.0.0.0 --port 4096     # ✓ works
-opencode run "refactor this" --auto                     # ✓ works
-opencode --auto                                         # ✓ works (TUI)
+```
+message=evaluated permission=bash ... action.action=ask    ← STILL PROMPTING
+message=evaluated permission=read ... action.action=allow  ← working
+message=evaluated permission=edit ... action.action=allow  ← working
 ```
 
-It does NOT appear in `opencode serve --help` because subcommand help only lists subcommand-specific flags. Global root flags (`--auto`, `--model`, `--agent`, `--print-logs`, etc.) are inherited by all subcommands transparently.
+The per-tool granular config is required to override `bash`.
 
-### Dockerfile CMD
+## Decision
 
-```dockerfile
-CMD ["opencode", "serve", "--auto", "--hostname", "0.0.0.0", "--port", "4096"]
-```
-
-## Belt-and-Suspenders: Config File
-
-The OpenCode config schema (`https://opencode.ai/config.json`) supports `"permission"` as a valid top-level key with values `"allow"`, `"ask"`, or `"deny"`:
+Use the **per-tool permission object** in the OpenCode config, written by `docker-entrypoint.sh` on every container start:
 
 ```jsonc
-// Global auto-approve all:
-{ "permission": "allow" }
-
-// Per-action granular control:
 {
   "permission": {
     "bash": "allow",
     "read": "allow",
     "edit": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "task": "allow",
+    "external_directory": "allow",
+    "todowrite": "allow",
+    "question": "allow",
     "webfetch": "allow",
     "websearch": "allow",
-    "question": "allow"
+    "lsp": "allow",
+    "doom_loop": "allow",
+    "skill": "allow"
   }
 }
 ```
 
-The `docker-entrypoint.sh` script writes `"permission": "allow"` to the config file on every start if not already set. This provides:
-
-- A persistent fallback if `--auto` were ever removed/changed
-- Granular per-action control available if needed later
-- Works independently of CLI flags
-
-## Decision
-
-**Use both approaches together:**
-1. `--auto` flag in the Dockerfile CMD (primary mechanism)
-2. `"permission": "allow"` in config via entrypoint script (secondary/fallback)
+The entrypoint checks if the current config already has this exact object (or the old `"allow"` string) and only writes if missing, avoiding unnecessary writes on every restart.
 
 ## Consequences
 
 ### Positive
 
-- Permissions are auto-approved reliably via two independent mechanisms
-- `--auto` is a runtime flag — no config file dependency
-- Config provides persistent fallback across restarts
-- Granular per-action control available if needed later
+- `bash` (shell commands) is now auto-approved — the most common permission prompt
+- Full coverage across all 15 permission types in the schema
+- Works with `opencode serve` (no CLI flag dependency)
+- Config persists in the Docker volume, surviving restarts
+- Per-tool object allows selective tightening later (e.g., deny `bash` but allow `read`)
 
 ### Negative
 
-- `--auto` is described as "dangerous" in the help text — acceptable in a single-user VPS
-- Config file approach adds a small Node.js execution to container startup
+- More verbose config than the simple string approach
+- If OpenCode adds new permission types, they'll need to be added here too
 
 ## Related Decisions
 

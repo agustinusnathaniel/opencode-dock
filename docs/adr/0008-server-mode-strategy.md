@@ -41,7 +41,7 @@ The original deployment used `opencode web` because it was assumed `opencode ser
 Use `opencode serve` for the server CMD. Both modes serve the same web UI on the same port, but `serve` is designed for persistent remote operation where browser connections may come and go.
 
 ```dockerfile
-CMD ["opencode", "serve", "--auto", "--hostname", "0.0.0.0", "--port", "4096"]
+CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
 ```
 
 ## Consequences
@@ -58,4 +58,4 @@ CMD ["opencode", "serve", "--auto", "--hostname", "0.0.0.0", "--port", "4096"]
 
 ## Related Decisions
 
-- ADR-0009: Permission approval strategy (`--auto` flag + config fallback)
+- ADR-0009: Permission approval strategy (per-tool config in entrypoint)

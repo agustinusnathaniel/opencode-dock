@@ -1,64 +1,46 @@
-# ADR-0009: Config-Based Permission Approval Over CLI `--auto` Flag
+# ADR-0009: Auto-Approve Permissions via CLI `--auto` Flag (with Config Fallback)
 
 ## Status
 
-Accepted
+Accepted (revised)
 
 ## Context
 
 OpenCode prompts for permission before executing potentially sensitive actions (file edits, shell commands, web requests, etc.). For a remote server where the developer trusts their own agents, these prompts are unnecessary friction.
 
-Two approaches were considered for auto-approving permissions:
+Two approaches are available for auto-approving permissions:
 
-1. **CLI `--auto` flag** — The global `--auto` flag on the `opencode` binary claims to "auto-approve permissions that are not explicitly denied (dangerous!)"
+1. **CLI `--auto` flag** — A **global** flag (works on ALL subcommands: `serve`, `web`, `run`, TUI) that tells OpenCode to "auto-approve permissions that are not explicitly denied"
 2. **Config-based permission setting** — The OpenCode configuration schema supports a top-level `"permission"` field set to `"allow"`, `"ask"`, or `"deny"`, with granular per-action overrides
-
-The `--auto` flag was initially attempted by modifying the Dockerfile CMD:
-
-```dockerfile
-CMD ["opencode", "web", "--auto", "--hostname", "0.0.0.0", "--port", "4096"]
-```
-
-This caused the container to immediately crash-loop because `--auto` is **not a valid flag** for the `web` or `serve` subcommands — it only applies to the default TUI mode. The CLI parser rejects unknown flags and exits with the help screen.
 
 ## Decision Drivers
 
 - **Must work with `opencode serve`** — The chosen server mode
 - **Persistent across restarts** — Setting should survive container restarts
 - **Simple and auditable** — Easy to understand what's configured
-- **No container crash risk** — Unlike invalid CLI flags
 
-## Considered Options
+## The Fix: CLI `--auto` Flag
 
-### Option 1: CLI `--auto` flag (rejected)
+The `--auto` flag is a **global flag** parsed by the root `opencode` command, not a subcommand-specific flag. It works with ALL modes:
 
-- **Pros**: Simple to add to Dockerfile CMD
-- **Cons**: **Does not work** with `opencode web` or `opencode serve` — only valid for TUI mode; caused container crash-loop; no way to verify without deploying
-
-### Option 2: Config-based `"permission": "allow"` (chosen)
-
-- **Pros**: Supported by the OpenCode config schema (`PermissionConfig`); persists in config file across restarts; supports granular per-action overrides (`bash`, `read`, `edit`, `websearch`, etc.); no risk of crash-loop
-- **Cons**: Requires modifying `opencode.jsonc` config file; config file lives in the persistent Docker volume
-
-### Option 3: Entrypoint auto-set (chosen approach)
-
-Write the `"permission": "allow"` setting on every container start via the `docker-entrypoint.sh` script. This combines the reliability of config-based approach with automatic setup.
-
-```javascript
-const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
-let config = {};
-try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
-if (config.permission !== "allow") {
-    config.permission = "allow";
-    fs.writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
-}
+```bash
+opencode serve --auto --hostname 0.0.0.0 --port 4096   # ✓ works
+opencode web --auto --hostname 0.0.0.0 --port 4096     # ✓ works
+opencode run "refactor this" --auto                     # ✓ works
+opencode --auto                                         # ✓ works (TUI)
 ```
 
-## Decision
+It does NOT appear in `opencode serve --help` because subcommand help only lists subcommand-specific flags. Global root flags (`--auto`, `--model`, `--agent`, `--print-logs`, etc.) are inherited by all subcommands transparently.
 
-Add a startup block in `docker-entrypoint.sh` that ensures `"permission": "allow"` is set in the OpenCode config. This runs on every container start and only writes if not already set, preserving any manual changes.
+### Dockerfile CMD
 
-The config schema supports both a simple string value or a per-action object:
+```dockerfile
+CMD ["opencode", "serve", "--auto", "--hostname", "0.0.0.0", "--port", "4096"]
+```
+
+## Belt-and-Suspenders: Config File
+
+The OpenCode config schema (`https://opencode.ai/config.json`) supports `"permission"` as a valid top-level key with values `"allow"`, `"ask"`, or `"deny"`:
 
 ```jsonc
 // Global auto-approve all:
@@ -77,20 +59,31 @@ The config schema supports both a simple string value or a per-action object:
 }
 ```
 
+The `docker-entrypoint.sh` script writes `"permission": "allow"` to the config file on every start if not already set. This provides:
+
+- A persistent fallback if `--auto` were ever removed/changed
+- Granular per-action control available if needed later
+- Works independently of CLI flags
+
+## Decision
+
+**Use both approaches together:**
+1. `--auto` flag in the Dockerfile CMD (primary mechanism)
+2. `"permission": "allow"` in config via entrypoint script (secondary/fallback)
+
 ## Consequences
 
 ### Positive
 
-- Permissions are auto-approved from the first start
-- Works with both `opencode serve` and `opencode web`
-- No risk of crash-loop from invalid CLI flags
-- Granular control available if needed later
-- Config file persists in volume, surviving restarts
+- Permissions are auto-approved reliably via two independent mechanisms
+- `--auto` is a runtime flag — no config file dependency
+- Config provides persistent fallback across restarts
+- Granular per-action control available if needed later
 
 ### Negative
 
-- Adds a small Node.js execution to every container startup
-- Permission setting stored in config file can be manually overridden
+- `--auto` is described as "dangerous" in the help text — acceptable in a single-user VPS
+- Config file approach adds a small Node.js execution to container startup
 
 ## Related Decisions
 

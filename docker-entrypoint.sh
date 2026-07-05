@@ -79,6 +79,21 @@ EOF
     fi
 fi
 
+# --- Auto-approve permissions for headless/web mode ---
+CONFIG_FILE="$HOME/.config/opencode/opencode.jsonc"
+mkdir -p "$(dirname "$CONFIG_FILE")"
+node -e '
+    const fs = require("fs");
+    const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
+    let config = {};
+    try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
+    if (config.permission !== "allow") {
+        config.permission = "allow";
+        fs.writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
+        console.log("Set permission: allow in opencode config");
+    }
+'
+
 # --- Source fnm and bun for interactive shells ---
 # Append PATH entries to .bashrc if not already present
 # (Debian's useradd -m copies /etc/skel/.bashrc, so it always exists)

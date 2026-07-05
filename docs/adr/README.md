@@ -11,6 +11,8 @@ This directory contains Architecture Decision Records (ADRs) for the my-remote-o
 | [0005](0005-dev-tools-strategy.md) | Dev Tools Inclusion Strategy | Accepted |
 | [0006](0006-volume-strategy.md) | Container Volume Strategy | Accepted |
 | [0007](0007-health-check-strategy.md) | Health Check Strategy | Accepted |
+| [0008](0008-server-mode-strategy.md) | Use `opencode serve` Over `opencode web` for Remote Deployment | Accepted |
+| [0009](0009-permission-approval-strategy.md) | Config-Based Permission Approval Over CLI `--auto` Flag | Accepted |
 
 ## Status Meanings
 

@@ -155,6 +155,24 @@ Result: session persists in DB, reviewable in web UI later
 
 See [ADR-0010](docs/adr/0010-session-lifecycle-and-background-tasks.md) for the full technical rationale.
 
+### Remote Agent Executor
+
+This deployment is designed to act as a **remote execution backend** for AI agents. Instead of the primary AI (Hermes, Claude Code, Codex, etc.) running tools directly on a resource-constrained instance, it delegates code tasks to OpenCode:
+
+```bash
+# Invoked by the primary AI:
+opencode run "Implement the user profile page" \
+  --attach http://opencode:4096 \
+  --auto \
+  -p "$OPENCODE_SERVER_PASSWORD"
+```
+
+**Benefits:**
+- **Resource isolation** — OpenCode has dedicated 4GB/4core limits, doesn't compete with the primary AI
+- **Persistent workspace** — SSH keys, git config, and tools are pre-configured in the OpenCode container
+- **Audit trail** — Every delegated task creates a session in the SQLite DB, reviewable in the web UI
+- **Same network** — If the primary AI runs on the same Coolify host, `opencode:4096` resolves via Docker DNS
+
 ## Connecting OpenCode Desktop
 
 From your local machine:

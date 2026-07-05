@@ -116,6 +116,42 @@ opencode run --continue \
   --auto -p "$PASSWORD"
 ```
 
+### Use Case: Remote Agent Executor for Another AI System
+
+This deployment can act as a **remote execution backend** for another AI agent (e.g., Hermes, Claude Code, Codex). Instead of the primary AI running tools directly (which may have resource constraints), it delegates code-intensive tasks to the OpenCode server.
+
+```
+┌─────────────────┐     plan + prompt     ┌──────────────────────┐
+│  Primary AI     │ ────────────────────→  │  OpenCode Server      │
+│  (Hermes, etc.) │                        │  (VPS, 16GB, 6 cores) │
+│                 │ ←──────────────────── │                       │
+│                 │   session ID / result  │  • Runs tools (bash,  │
+│                 │                        │    edit, git, etc.)   │
+│                 │                        │  • Has SSH keys,      │
+│                 │                        │    workspace access   │
+│                 │                        │  • Full toolchain     │
+└─────────────────┘                        └──────────────────────┘
+```
+
+The primary AI invokes OpenCode via:
+
+```bash
+opencode run "<task description>" \
+  --attach http://opencode:4096 \   # or localhost if same host
+  --auto \
+  -p "$OPENCODE_SERVER_PASSWORD"
+```
+
+**Why this works:**
+
+| Requirement | How it's met |
+|---|---|
+| Auto-approved permissions | `--auto` flag (valid for `run`) |
+| Fire-and-forget execution | `opencode run` doesn't need persistent WebSocket |
+| Result retrieval | Session ID returned; poll or open web UI to review |
+| Same network | Both containers on same Coolify host → low latency |
+| Resource isolation | OpenCode has its own 4GB/4core limit, doesn't compete with primary AI |
+
 ## Consequences
 
 ### Positive

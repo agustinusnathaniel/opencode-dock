@@ -111,6 +111,50 @@ If you want SSO log in before anyone reaches your OpenCode server, add Cloudflar
 
 This puts an authentication gate in front of your server. No one reaches the OpenCode login screen without passing Cloudflare Access first.
 
+## Usage Patterns
+
+OpenCode v1.17.13 has two distinct usage modes with different session lifecycle behaviors.
+
+### Web UI (Interactive)
+
+Open `https://opencode.sznm.cloud` in your browser. Agent execution streams in real-time. **Keep the tab open** — closing it while an agent is running cancels the in-progress execution.
+
+```
+Best for: quick tasks, interactive debugging, reviewing results
+Limitation: session is cancelled if tab closes mid-execution
+```
+
+### CLI Background Tasks (Fire-and-Forget)
+
+Use `opencode run --attach` to run tasks headlessly against the running server. The task completes even if you close your terminal.
+
+```bash
+# From your local machine:
+opencode run "Refactor the auth module" \
+  --attach https://opencode.sznm.cloud \
+  --auto \
+  -p "$OPENCODE_SERVER_PASSWORD"
+
+# Continue the last session:
+opencode run --continue \
+  --attach https://opencode.sznm.cloud \
+  --auto -p "$PASSWORD"
+
+# From inside the container (via SSH):
+docker exec -it $(docker ps --filter name=opencode -q) \
+  opencode run "Add input validation" \
+  --attach http://localhost:4096 --auto
+```
+
+After completion, open the web UI to review the session in the session list.
+
+```
+Best for: long-running tasks, batch operations, scheduled jobs
+Result: session persists in DB, reviewable in web UI later
+```
+
+See [ADR-0010](docs/adr/0010-session-lifecycle-and-background-tasks.md) for the full technical rationale.
+
 ## Connecting OpenCode Desktop
 
 From your local machine:

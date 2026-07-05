@@ -89,7 +89,7 @@ node -e '
     const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
     let config = {};
     try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
-    if (config.permission !== "allow" && JSON.stringify(config.permission) !== JSON.stringify({
+    if (JSON.stringify(config.permission) !== JSON.stringify({
         read: "allow", edit: "allow", glob: "allow", grep: "allow",
         list: "allow", bash: "allow", task: "allow",
         external_directory: "allow", todowrite: "allow", question: "allow",

@@ -44,7 +44,7 @@ RUN corepack enable \
     && corepack prepare yarn@4.17.0 --activate
 
 # Install OpenCode (version bumps only bust cache from here)
-ARG OPENCODE_VERSION=1.17.13
+ARG OPENCODE_VERSION=1.17.14
 RUN curl -fsSL https://opencode.ai/install | bash -s -- ${OPENCODE_VERSION}
 ENV PATH=/home/opencode/.opencode/bin:$PATH
 

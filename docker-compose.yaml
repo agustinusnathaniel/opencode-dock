@@ -6,7 +6,7 @@ services:
       args:
         OPENCODE_VERSION: 1.17.14
     mem_limit: 4g
-    cpus: "4"
+    cpus: "3"
     environment:
       - NODE_NO_WARNINGS=1
       - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD:?error}

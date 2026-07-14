@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        OPENCODE_VERSION: 1.17.18
+        OPENCODE_VERSION: 1.17.20
     mem_limit: 4g
     cpus: "3"
     environment:

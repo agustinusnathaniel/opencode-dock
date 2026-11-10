@@ -71,13 +71,14 @@ Runtime data persists across restarts through two named volumes:
 | `opencode-home` | `/home/opencode` | Everything: config, data, cache, agents, auth tokens |
 | `opencode-workspace` | `/home/opencode/workspace` | Projects (survives home volume wipes) |
 
-Node.js and the entrypoint live in the image (`/usr`, `/usr/local/bin`) —
-outside the home volume so they never get shadowed. npm-global tools
-(`~/.npm-global`) and `~/.local/bin` seed the home volume from the image on
-first start and persist across rebuilds.
+Node.js, the entrypoint, and the full agent toolchain live in the image (`/usr`,
+`/usr/local/bin`, `/opt`) — outside the home volume so they never get
+shadowed. Tool *configuration* (opencode config, MCP wiring, plugin state,
+auth tokens, caches) lives in `opencode-home` and is (re)created by the
+entrypoint on every start, so existing volumes pick up wiring automatically.
 
-On tool version upgrades, delete `opencode-home` before redeploying to get
-fresh binaries. The workspace volume is unaffected.
+Tool binaries refresh automatically on every rebuild — no volume wipe needed.
+The workspace volume is unaffected regardless.
 
 ## Environment Variables
 
@@ -256,9 +257,11 @@ CodeGraph, Tokscale, the WakaTime plugin, and RTK are pre-installed in the image
 - No container ports are exposed beyond what Coolify's reverse proxy handles.
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
 - Persistent volumes store user config and data; the system toolchain (Node.js,
-  entrypoint) comes fresh from the image on every build, while npm-global and
-  `~/.local/bin` tools persist in `opencode-home` — delete it on tool upgrades
-  to get fresh binaries.
+  entrypoint, pnpm/yarn shims, codegraph/tokscale/wakatime in `/opt`, rtk in
+  `/usr/local/bin`) comes fresh from the image on every build and cannot be
+  shadowed by `opencode-home`. Ad-hoc `npm install -g` by agents lands in the
+  image layer and is ephemeral by design — use project-local installs (persisted
+  via the workspace volume) for anything that must survive a redeploy.
 
 ## Credits
 

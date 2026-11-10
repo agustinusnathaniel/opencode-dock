@@ -121,15 +121,47 @@ node -e '
     }
 '
 
-# --- Source npm-global and local bins for interactive shells ---
-# Append PATH entries to .bashrc if not already present
-# (Alpine adduser -D creates ~/.bashrc? guard with -f like before; create if missing)
+# --- Ensure agent-tool wiring in the home volume (idempotent, fail-open) ---
+# Binaries live in the image; their *config* lives in the home volume and must
+# be (re)created per volume, not baked into the image (a baked copy only seeds
+# fresh volumes and is shadowed on existing ones). Each step checks before it
+# writes and never blocks server start.
+if command -v codegraph >/dev/null 2>&1; then
+    if ! grep -q "codegraph" "$CONFIG_FILE" 2>/dev/null; then
+        echo "Wiring codegraph MCP server into opencode config..."
+        codegraph install --yes --target=opencode \
+            || echo "WARNING: codegraph MCP wiring failed (run 'codegraph install --yes --target=opencode' manually)."
+    fi
+else
+    echo "WARNING: codegraph binary missing (expected in /opt/npm-global/bin; image layer incomplete?)." >&2
+fi
+if command -v rtk >/dev/null 2>&1; then
+    rtk init -g --opencode >/dev/null 2>&1 \
+        || echo "WARNING: 'rtk init -g --opencode' failed (run manually)."
+else
+    echo "WARNING: rtk binary missing (expected in /usr/local/bin; image layer incomplete?)." >&2
+fi
+for _cmd in pnpm yarn tokscale; do
+    command -v "$_cmd" >/dev/null 2>&1 \
+        || echo "WARNING: $_cmd binary missing (image layer incomplete?)." >&2
+done
+if [ ! -d "/opt/npm-global/lib/node_modules/opencode-wakatime" ]; then
+    echo "WARNING: opencode-wakatime package missing in /opt/npm-global (image layer incomplete?)." >&2
+fi
+unset _cmd
+
+# --- Interactive-shell PATH: system toolchain first, home compat after ---
+# Binaries live in the image (/opt/npm-global/bin, /usr/local/bin) so home
+# volumes can never shadow them (ADR-0006). The server process itself inherits
+# PATH from the Dockerfile ENV; this block is only for interactive shells.
+# Migration guard keys on the path, not the old marker: volumes created before
+# the /opt move carry the v1 block without system entries.
 PROFILE_FILE="$HOME/.bashrc"
-if ! grep -q "opencode_env" "$PROFILE_FILE" 2>/dev/null; then
+if ! grep -q "/opt/npm-global/bin" "$PROFILE_FILE" 2>/dev/null; then
     cat >> "$PROFILE_FILE" << 'BASHRCEOF'
 
-# OpenCode environment (opencode_env marker: do not remove)
-export PATH="$HOME/.npm-global/bin:$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
+# OpenCode system toolchain (opencode_env_v2 marker: do not remove)
+export PATH="/opt/npm-global/bin:/usr/local/bin:$HOME/.npm-global/bin:$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF

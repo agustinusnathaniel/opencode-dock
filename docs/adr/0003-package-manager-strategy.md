@@ -38,9 +38,19 @@ Options: install pnpm and yarn directly via npm, use Corepack, or install stand-
 
 ## Decision
 
-Use **Corepack** to enable pnpm (11.9.0) and yarn (4.17.0). This runs in the same Dockerfile RUN layer as the Node.js install.
+Use **Corepack** to enable pnpm (11.9.0) and yarn (4.17.0). This runs in the Dockerfile toolchain layer.
 
 Versions are pinned explicitly in the Dockerfile to prevent surprise breakage from upstream releases.
+
+## Amendment 2026-11-10: shims and activations live outside `$HOME`
+
+A bare `corepack enable` targets a `HOME`-adjacent directory, which the
+`opencode-home` volume shadows (reproduced: `corepack: command not found`
+after rebuild). The image therefore sets `COREPACK_HOME=/opt/corepack` and
+runs `corepack enable --install-directory /usr/local/bin`, so shims (`pnpm`,
+`yarn`) and activations survive existing volumes. `npm install -g corepack`
+itself targets the system prefix (`NPM_CONFIG_PREFIX=/opt/npm-global`), not
+`~/.npm-global`.
 
 ## Consequences
 

@@ -49,7 +49,7 @@ Adjust in Coolify's UI if needed.
 5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`).
 6. Deploy.
 
-Coolify will pull the repo, build the Docker image, and start the container. The first build downloads the OpenCode binary and may take a minute.
+Coolify will pull the repo, pull the pinned OpenCode base image plus the toolchain layers, and start the container. The first build may take a few minutes.
 
 ## Included Tools
 
@@ -173,7 +173,7 @@ opencode run "Implement the user profile page" \
 ```
 
 **Benefits:**
-- **Resource isolation** — OpenCode has dedicated 4GB/4core limits, doesn't compete with the primary AI
+- **Resource isolation** — OpenCode has dedicated 4GB/3-core limits, doesn't compete with the primary AI
 - **Persistent workspace** — SSH keys, git config, and tools are pre-configured in the OpenCode container
 - **Audit trail** — Every delegated task creates a session in the SQLite DB, reviewable in the web UI
 - **Same network** — If the primary AI runs on the same Coolify host, `opencode:4096` resolves via Docker DNS
@@ -238,8 +238,10 @@ These tools are not baked into the Docker image but can be installed in your fir
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
 - No container ports are exposed beyond what Coolify's reverse proxy handles.
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
-- Persistent volumes only store user config and data, never tool binaries.
-  Tool binaries come fresh from the image on every build.
+- Persistent volumes store user config and data; the system toolchain (Node.js,
+  entrypoint) comes fresh from the image on every build, while npm-global and
+  `~/.local/bin` tools persist in `opencode-home` — delete it on tool upgrades
+  to get fresh binaries.
 
 ## Credits
 

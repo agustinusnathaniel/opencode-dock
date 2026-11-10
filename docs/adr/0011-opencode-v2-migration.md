@@ -46,10 +46,14 @@ renamed and need explicit changes.
 
 ## Decision
 
-1. **Install**: `https://opencode.ai/v2/install` with `bash -s -- --version
-   ${OPENCODE_VERSION}`; pin `2.2.7`. Single version source: compose build arg
-   `${OPENCODE_VERSION:-2.2.7}`, documented in `.env.example` (fixes the
-   Dockerfile/compose pin drift).
+1. **Pin**: `OPENCODE_VERSION` selects the base-image tag
+   (`FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}`); pin `2.2.7`.
+   Single version source: compose build arg `${OPENCODE_VERSION:-2.2.7}`,
+   documented in `.env.example` (fixes the Dockerfile/compose pin drift).
+   No install script is involved, so the fragile v1 positional-arg form
+   (which would silently install latest instead of the pin) is gone entirely.
+   The v2 install script's `--version` flag (probe table) is historical context
+   for why the tag approach was preferred, not the adopted mechanism.
 2. **Auth env**: canonical `OPENCODE_PASSWORD`; entrypoint adopts legacy
    `OPENCODE_SERVER_PASSWORD` as fallback and fails fast when neither is set.
    Drop `OPENCODE_SERVER_USERNAME` (unsupported; always `opencode`). Both the

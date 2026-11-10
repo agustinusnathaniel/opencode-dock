@@ -72,4 +72,12 @@ The `build-essential` package is intentionally included despite its ~60MB size. 
 
 - ADR-0002: fnm for Node.js (provides Node 22)
 - ADR-0003: Corepack for pnpm/yarn (package managers)
+
+## v2 Note (OpenCode 2.x, ADR-0011)
+
+The tool *set* above is unchanged, but provisioning moved with the
+official-image base: `apt` → `apk` (`github-cli` instead of the `gh` package
+name), fnm → Alpine Node (v24.x at last probe), and the current image carries
+neither Bun nor build-essential. Source column above is the v1 historical
+record.
 - ADR-0004: Container security (build-essential includes compilers — no security concern, they're used at runtime)

@@ -5,7 +5,7 @@ This directory contains Architecture Decision Records (ADRs) for the my-remote-o
 | ADR | Title | Status |
 |-----|-------|--------|
 | [0001](0001-ingress-strategy.md) | Choose Coolify Proxy + Cloudflare DNS over Cloudflare Tunnel | Accepted |
-| [0002](0002-node-version-manager.md) | Choose fnm over nvm/Volta for Node.js Version Management | Accepted |
+| [0002](0002-node-version-manager.md) | Choose fnm over nvm/Volta for Node.js Version Management | Superseded by 0011 |
 | [0003](0003-package-manager-strategy.md) | Use Corepack for pnpm and yarn | Accepted |
 | [0004](0004-container-security-posture.md) | Container Security Posture | Accepted |
 | [0005](0005-dev-tools-strategy.md) | Dev Tools Inclusion Strategy | Accepted |
@@ -14,6 +14,7 @@ This directory contains Architecture Decision Records (ADRs) for the my-remote-o
 | [0008](0008-server-mode-strategy.md) | Use `opencode serve` Over `opencode web` for Remote Deployment | Accepted |
 | [0009](0009-permission-approval-strategy.md) | Granular Per-Tool Permission Config for Headless Mode | Accepted (revised) |
 | [0010](0010-session-lifecycle-and-background-tasks.md) | Session Lifecycle and Background Task Execution | Accepted |
+| [0011](0011-opencode-v2-migration.md) | Migrate to OpenCode v2 (install, auth, permissions, healthcheck; base-image evaluation) | Accepted |
 
 ## Status Meanings
 

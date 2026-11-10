@@ -61,6 +61,12 @@ volumes:
 
 ### Attempt 3: System paths for tools + home volume
 
+> v2 note: with the official-image base (ADR-0011), Node.js lives in the image
+> (`/usr` via apk) and the entrypoint stays at `/usr/local/bin/`. npm-global
+> tools moved to `~/.npm-global` (inside the home volume, seeded from the
+> image on first start) — managed tools, not pinned binaries, so volume
+> persistence is acceptable there.
+
 Moved tool installations outside the home directory so the home volume
 couldn't shadow them:
 

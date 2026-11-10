@@ -26,8 +26,10 @@ Coolify Proxy (Caddy/Traefik + Let's Encrypt SSL)
 OpenCode Server (port 4096, inside Docker)
   |
   | Entrypoint: /usr/local/bin/docker-entrypoint.sh
+  |  • Adopts OPENCODE_PASSWORD (falls back to legacy OPENCODE_SERVER_PASSWORD)
   |  • Injects SSH key from SSH_PRIVATE_KEY env var
   |  • Writes provider keys to auth.json (OPENCODE_GO_API_KEY / ZEN_API_KEY)
+  |  • Writes native v2 permissions (allow-all for headless) + experimental.todo
   |  • Configures git identity (GIT_USER_NAME / GIT_USER_EMAIL)
   |  • Sets up WakaTime config (WAKATIME_API_KEY)
   |  • Formats single-line SSH keys into proper multi-line format
@@ -35,7 +37,7 @@ OpenCode Server (port 4096, inside Docker)
 
 Traffic flows from your device through Cloudflare's proxy (which hides your VPS IP), then to Coolify's reverse proxy (which handles SSL termination), then to the OpenCode container.
 
-The container runs with a 4GB memory / 2 CPU limit and explicit DNS (1.1.1.1, 8.8.8.8).
+The container runs with a 4GB memory / 3 CPU limit and explicit DNS (1.1.1.1, 8.8.8.8).
 Adjust in Coolify's UI if needed.
 
 ## Deploying in Coolify
@@ -44,7 +46,7 @@ Adjust in Coolify's UI if needed.
 2. In Coolify, go to "New Resource" and pick "Docker Compose".
 3. Connect the git repository you forked/cloned.
 4. Set the domain (e.g., `opencode.yourdomain.com`) and point it to port `4096`.
-5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_SERVER_PASSWORD` and `OPENCODE_GO_API_KEY`).
+5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`).
 6. Deploy.
 
 Coolify will pull the repo, build the Docker image, and start the container. The first build downloads the OpenCode binary and may take a minute.
@@ -53,8 +55,8 @@ Coolify will pull the repo, build the Docker image, and start the container. The
 
 The Docker image ships with these tools pre-installed:
 
-- **Runtime:** Node.js 24 (via fnm at `/opt/fnm`)
-- **Package managers:** npm, pnpm 11.9.0, yarn 4.17.0 (via Corepack)
+- **Runtime:** Node.js (Alpine apk), npm
+- **Package managers:** pnpm 11.9.0, yarn 4.17.0 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph`), Rust Token Killer (`rtk`)
 - **AI coding tools:** Tokscale (`tokscale`), WakaTime plugin (`opencode-wakatime`)
@@ -62,15 +64,17 @@ The Docker image ships with these tools pre-installed:
 
 ## Persistent Volumes
 
-Runtime data persists across restarts through four named volumes:
+Runtime data persists across restarts through two named volumes:
 
 | Volume | Mount | Covers |
 |--------|-------|-------|
 | `opencode-home` | `/home/opencode` | Everything: config, data, cache, agents, auth tokens |
 | `opencode-workspace` | `/home/opencode/workspace` | Projects (survives home volume wipes) |
 
-Tool binaries live at `/opt/fnm/` (Node.js) and `/usr/local/bin/` (entrypoint) —
-outside the home volume so they never get shadowed.
+Node.js and the entrypoint live in the image (`/usr`, `/usr/local/bin`) —
+outside the home volume so they never get shadowed. npm-global tools
+(`~/.npm-global`) and `~/.local/bin` seed the home volume from the image on
+first start and persist across rebuilds.
 
 On tool version upgrades, delete `opencode-home` before redeploying to get
 fresh binaries. The workspace volume is unaffected.
@@ -81,7 +85,8 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `OPENCODE_SERVER_PASSWORD` | Yes | Password for the web UI and API. Set a strong one. |
+| `OPENCODE_PASSWORD` | Yes | Password for the web UI and API (v2 canonical name; basic-auth username is always `opencode`). Set a strong one. |
+| `OPENCODE_SERVER_PASSWORD` | No | Legacy v1 name, still honored as fallback when `OPENCODE_PASSWORD` is unset. |
 | `OPENCODE_GO_API_KEY` | Yes | API key for the OpenCode Go provider. |
 | `OPENCODE_ZEN_API_KEY` | No | Falls back to `OPENCODE_GO_API_KEY` if not set. Same key works for both. |
 | `SSH_PRIVATE_KEY` | No | Private key for agents to push/pull code. Supports single-line and multi-line formats. |
@@ -89,13 +94,13 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GIT_USER_EMAIL` | No | Git author email for agent commits. |
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
-| `OPENCODE_SERVER_USERNAME` | No | HTTP basic auth username (default: `opencode`). |
+| `OPENCODE_VERSION` | No | OpenCode version to build (default `2.2.7`). |
 
 ## Updating OpenCode
 
-1. Open `docker-compose.yml`
-2. Change the `OPENCODE_VERSION` build arg to the new version
-3. Rebuild: Coolify will pick up the change on the next deployment
+1. Change `OPENCODE_VERSION` (in your `.env` / Coolify env vars, or the compose
+   build arg default) to the new version
+2. Rebuild: Coolify will pick up the change on the next deployment
 
 To check the current installed version, run `opencode --version` in a session.
 
@@ -113,7 +118,7 @@ This puts an authentication gate in front of your server. No one reaches the Ope
 
 ## Usage Patterns
 
-OpenCode v1.17.13 has two distinct usage modes with different session lifecycle behaviors.
+OpenCode v2 has two distinct usage modes with different session lifecycle behaviors.
 
 ### Web UI (Interactive)
 
@@ -126,24 +131,24 @@ Limitation: session is cancelled if tab closes mid-execution
 
 ### CLI Background Tasks (Fire-and-Forget)
 
-Use `opencode run --attach` to run tasks headlessly against the running server. The task completes even if you close your terminal.
+Use `opencode run --server` to run tasks headlessly against the running server. The task completes even if you close your terminal.
 
 ```bash
 # From your local machine:
 opencode run "Refactor the auth module" \
-  --attach https://opencode.sznm.cloud \
+  --server https://opencode.sznm.cloud \
   --auto \
-  -p "$OPENCODE_SERVER_PASSWORD"
+  -p "$OPENCODE_PASSWORD"
 
 # Continue the last session:
 opencode run --continue \
-  --attach https://opencode.sznm.cloud \
-  --auto -p "$PASSWORD"
+  --server https://opencode.sznm.cloud \
+  --auto -p "$OPENCODE_PASSWORD"
 
 # From inside the container (via SSH):
 docker exec -it $(docker ps --filter name=opencode -q) \
   opencode run "Add input validation" \
-  --attach http://localhost:4096 --auto
+  --server http://localhost:4096 --auto
 ```
 
 After completion, open the web UI to review the session in the session list.
@@ -162,9 +167,9 @@ This deployment is designed to act as a **remote execution backend** for AI agen
 ```bash
 # Invoked by the primary AI:
 opencode run "Implement the user profile page" \
-  --attach http://opencode:4096 \
+  --server http://opencode:4096 \
   --auto \
-  -p "$OPENCODE_SERVER_PASSWORD"
+  -p "$OPENCODE_PASSWORD"
 ```
 
 **Benefits:**
@@ -178,10 +183,10 @@ opencode run "Implement the user profile page" \
 From your local machine:
 
 ```bash
-opencode --hostname opencode.yourdomain.com --port 443
+opencode --server https://opencode.yourdomain.com
 ```
 
-You will be prompted for the `OPENCODE_SERVER_PASSWORD`. Enter it and you are connected.
+You will be prompted for the `OPENCODE_PASSWORD`. Enter it and you are connected.
 
 ## SSH Key Setup (Optional)
 
@@ -222,13 +227,13 @@ These tools are not baked into the Docker image but can be installed in your fir
 
 | Tool | Purpose | Install command |
 |------|---------|----------------|
-| [Maestria](https://maestria.sznm.dev/) | Agent workflow patterns (8 specialists, pipeline orchestration) | `opencode plugin @maestria/opencode@latest -g` |
-| [opencode-wakatime](https://github.com/angristan/opencode-wakatime) | Track AI coding activity in your WakaTime dashboard | `npm i -g opencode-wakatime` then add `"plugin": ["opencode-wakatime"]` to `~/.config/opencode/opencode.json` and create `~/.wakatime.cfg` with your API key |
+| [Maestria](https://maestria.sznm.dev/) | Agent workflow patterns (8 specialists, pipeline orchestration) | `opencode plugin add @maestria/opencode@latest` |
+| [opencode-wakatime](https://github.com/angristan/opencode-wakatime) | Track AI coding activity in your WakaTime dashboard | `opencode plugin add opencode-wakatime` then add `"plugins": ["opencode-wakatime"]` to `~/.config/opencode/opencode.json` and create `~/.wakatime.cfg` with your API key |
 | [Tokscale](https://github.com/junhoyeo/tokscale) | Token usage and cost dashboard for AI coding tools | `npm i -g tokscale` or use `npx tokscale@latest` |
 
 ## Security Notes
 
-- The container runs as a non-root user with a read-only filesystem.
+- The container runs as a non-root user with dropped Linux capabilities (`no-new-privileges`, `cap_drop: ALL`).
 - Cloudflare's DNS proxy hides your VPS IP address from direct attacks.
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
 - No container ports are exposed beyond what Coolify's reverse proxy handles.

@@ -100,3 +100,13 @@ vars aren't expanded. Switched to `CMD-SHELL` to get expansion.
 ## Related Decisions
 
 - ADR-0001: Ingress strategy (Coolify proxy + Cloudflare DNS)
+
+## v2 Amendment (OpenCode 2.x)
+
+Probed on `2.2.7`: `/api/health` returns `404` (endpoint removed in the
+revised v2 server API). The replacement healthcheck target is `GET /api/info`,
+which returns `200` with `{"version":...}` when authenticated and `401`
+otherwise. `OPENCODE_SERVER_USERNAME` is no longer supported (username is
+always `opencode`); `OPENCODE_PASSWORD` is canonical and
+`OPENCODE_SERVER_PASSWORD` still works as fallback. See ADR-0011. The `CMD`
+snippets above are retained as the v1 historical record.

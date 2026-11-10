@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-0011 (Node.js now comes from Alpine apk on the official-image base; no version manager in the container)
 
 ## Context
 

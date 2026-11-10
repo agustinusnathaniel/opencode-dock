@@ -102,6 +102,22 @@ See `.env.example` for the full list with descriptions. The ones you need to car
    build arg default) to the new version
 2. Rebuild: Coolify will pick up the change on the next deployment
 
+### Upgrading from v1 (stale volume)
+
+The v1 `opencode-home` volume contains a v1 server binary at
+`~/.opencode/bin/opencode` that cannot execute on the v2 (Alpine) base and
+would otherwise shadow the new binary. Zero-loss fix on the host (keeps
+sessions, config, and tools — removes only the shadowing binary):
+
+```bash
+docker volume ls | grep opencode  # confirm the volume name
+docker run --rm -v <opencode-home-volume>:/home/opencode alpine \
+  rm -f /home/opencode/.opencode/bin/opencode
+```
+
+Then redeploy/restart. (A full `opencode-home` reset also works but deletes
+session history; the workspace volume is unaffected either way.)
+
 To check the current installed version, run `opencode --version` in a session.
 
 ## Cloudflare Access (Optional Auth Layer)

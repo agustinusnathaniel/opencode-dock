@@ -68,6 +68,12 @@ renamed and need explicit changes.
 6. **Base image**: extend the official `ghcr.io/anomalyco/opencode` image instead
    of maintaining a Debian+fnm base (adopted after challenge review — the
    musl/Alpine risks are verified by build + probe, not assumed).
+   The server `CMD` uses the absolute image path `/usr/local/bin/opencode`
+   (not bare `opencode`): an upgraded `opencode-home` volume may still contain
+   a previous `~/.opencode/bin/opencode` that shadows `PATH` and cannot
+   execute on the new base — deploying v2 onto a v1 volume failed exactly
+   this way (reproduced locally), fixed by the absolute path plus a
+   zero-loss host-side removal of the stale binary (see README).
 
 ## Base-Image Decision (revised: extend official image)
 

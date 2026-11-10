@@ -149,5 +149,22 @@ else
     rm -f "$HOME/workspace/.write-test"
 fi
 
+# --- Remove stale server binary shadowing PATH (automatic v1->v2 repair) ---
+# An upgraded opencode-home volume may contain a previous
+# ~/.opencode/bin/opencode that precedes /usr/local/bin in PATH but cannot
+# execute on this base (e.g. v1 glibc binary on Alpine/musl). Probe it:
+# `opencode --version` is a pure print with no side effects (verified), so a
+# working binary answers instantly and is left alone (e.g. from
+# `opencode upgrade`); anything else is removed so PATH falls through to the
+# image-pinned binary. Fail-open: removal failure never blocks server start
+# (CMD uses the absolute image path regardless).
+STALE_BIN="$HOME/.opencode/bin/opencode"
+if [ -f "$STALE_BIN" ]; then
+    if ! "$STALE_BIN" --version >/dev/null 2>&1; then
+        echo "Removing stale/unusable server binary at ~/.opencode/bin/opencode."
+        rm -f "$STALE_BIN" || echo "WARNING: Could not remove stale server binary."
+    fi
+fi
+
 # --- Execute the main command ---
 exec "$@"

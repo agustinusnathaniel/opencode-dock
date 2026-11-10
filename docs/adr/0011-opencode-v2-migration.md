@@ -109,10 +109,13 @@ silently install latest instead of the pin).
 
 ### Negative / Follow-ups
 
-- `opencode-wakatime`, `codegraph`, `tokscale`, `rtk --opencode` are carried over
-  unbumped and must each be re-verified against v2 (V1 plugin implementations
-  do not run in V2). If `opencode-wakatime` uses the old plugin API it will
-  break at runtime — tracked as a deployment verification step, not fixed here.
+- Third-party wiring is verified compatible pre-deploy; remaining check is
+  deploy smoke, not porting: `rtk` 1.2.0 ships a dual v1/v2 OpenCode plugin
+  (confirmed in the built image); `opencode-wakatime` upstream supports v1+v2
+  (dual entrypoints targeting `@opencode/plugin` 2.0.18); `codegraph` wires
+  via MCP server config (version-agnostic); `tokscale` is a standalone CLI.
+  On the deployed container, confirm with `opencode auth list`, a clean plugin
+  load (no warnings in server logs), and a headless `run --server --auto`.
 - `auth.json` injection (`opencode-go`/`opencode` keys) is unchanged; v2 imports
   legacy `auth.json` on fresh installs, but credential shape must be confirmed
   with `opencode auth list --format json` on the deployed v2 container.

@@ -223,13 +223,14 @@ The `gh` CLI autodetects this variable and authenticates automatically.
 
 ## Post-Deployment Tools
 
-These tools are not baked into the Docker image but can be installed in your first session. Since the config volume persists across restarts, you only need to do this once.
+CodeGraph, Tokscale, the WakaTime plugin, and RTK are pre-installed in the image. Maestria is the only on-demand install — since the config volume persists across restarts, you only need to do it once.
 
-| Tool | Purpose | Install command |
-|------|---------|----------------|
+| Tool | Purpose | Activate / install |
+|------|---------|-------------------|
 | [Maestria](https://maestria.sznm.dev/) | Agent workflow patterns (8 specialists, pipeline orchestration) | `opencode plugin add @maestria/opencode@latest` |
-| [opencode-wakatime](https://github.com/angristan/opencode-wakatime) | Track AI coding activity in your WakaTime dashboard | `opencode plugin add opencode-wakatime` then add `"plugins": ["opencode-wakatime"]` to `~/.config/opencode/opencode.json` and create `~/.wakatime.cfg` with your API key |
-| [Tokscale](https://github.com/junhoyeo/tokscale) | Token usage and cost dashboard for AI coding tools | `npm i -g tokscale` or use `npx tokscale@latest` |
+| [opencode-wakatime](https://github.com/angristan/opencode-wakatime) (pre-installed, supports v1+v2) | Track AI coding activity in your WakaTime dashboard | Add `"plugins": ["opencode-wakatime"]` to `~/.config/opencode/opencode.json` and create `~/.wakatime.cfg` with your API key |
+| [Tokscale](https://github.com/junhoyeo/tokscale) (pre-installed) | Token usage and cost dashboard for AI coding tools | Just run `tokscale` |
+| RTK (pre-installed, v2-compatible) | Shell-output compression for fewer tokens | Active via its OpenCode plugin; check savings with `rtk gain` |
 
 ## Security Notes
 

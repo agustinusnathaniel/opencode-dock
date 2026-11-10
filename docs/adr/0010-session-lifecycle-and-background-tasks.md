@@ -6,6 +6,10 @@ Accepted
 
 ## Context
 
+> v2 amendment: all `opencode run --attach <url>` examples in this ADR read as
+> `opencode run --server <url>` on OpenCode 2.x (`--attach` removed;
+> `--auto` and the lifecycle behavior are unchanged). See ADR-0011.
+
 OpenCode v1.17.13 (commercial build from opencode.ai) has a specific session lifecycle model that affects how agents can be used on a remote server.
 
 ### Session Lifecycle

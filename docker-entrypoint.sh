@@ -2,6 +2,20 @@
 # This file must live outside $HOME (not shadowed by opencode-home volume)
 set -e
 
+# --- Server password (OpenCode v2) ---
+# Canonical: OPENCODE_PASSWORD. Legacy OPENCODE_SERVER_PASSWORD is still
+# honored by the server and adopted here. v2 has no OPENCODE_SERVER_USERNAME;
+# the username is always `opencode`.
+if [ -z "${OPENCODE_PASSWORD:-}" ]; then
+    if [ -n "${OPENCODE_SERVER_PASSWORD:-}" ]; then
+        export OPENCODE_PASSWORD="$OPENCODE_SERVER_PASSWORD"
+        echo "Using legacy OPENCODE_SERVER_PASSWORD (consider renaming to OPENCODE_PASSWORD)."
+    else
+        echo "ERROR: Set OPENCODE_PASSWORD (or legacy OPENCODE_SERVER_PASSWORD) before starting." >&2
+        exit 1
+    fi
+fi
+
 # --- OpenCode provider auth ---
 if [ -n "$OPENCODE_GO_API_KEY" ] || [ -n "$OPENCODE_ZEN_API_KEY" ]; then
     ZEN_KEY="${OPENCODE_ZEN_API_KEY:-$OPENCODE_GO_API_KEY}"
@@ -79,9 +93,12 @@ EOF
     fi
 fi
 
-# --- Auto-approve permissions for headless mode ---
-# Simple "permission": "allow" only overrides some tool defaults (read, edit, etc.)
-# but NOT bash/shell commands. Must use per-tool granular config.
+# --- Auto-approve permissions for headless mode (OpenCode v2 shape) ---
+# v2 uses a `permissions` array (not the v1 `permission` object) with renamed
+# actions: bash->shell, task->subagent, write/patch->edit. doom_loop and lsp
+# are not v2 Core actions; todowrite is the experimental.todo flag.
+# external_directory is allowed by default in v2; listing it keeps headless
+# runs non-interactive even if defaults change.
 CONFIG_FILE="$HOME/.config/opencode/opencode.jsonc"
 mkdir -p "$(dirname "$CONFIG_FILE")"
 node -e '
@@ -89,34 +106,30 @@ node -e '
     const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
     let config = {};
     try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
-    if (JSON.stringify(config.permission) !== JSON.stringify({
-        read: "allow", edit: "allow", glob: "allow", grep: "allow",
-        list: "allow", bash: "allow", task: "allow",
-        external_directory: "allow", todowrite: "allow", question: "allow",
-        webfetch: "allow", websearch: "allow", lsp: "allow",
-        doom_loop: "allow", skill: "allow"
-    })) {
-        config.permission = {
-            read: "allow", edit: "allow", glob: "allow", grep: "allow",
-            list: "allow", bash: "allow", task: "allow",
-            external_directory: "allow", todowrite: "allow", question: "allow",
-            webfetch: "allow", websearch: "allow", lsp: "allow",
-            doom_loop: "allow", skill: "allow"
-        };
+    const allowAll = [
+        "read", "edit", "glob", "grep", "shell", "subagent",
+        "skill", "question", "webfetch", "websearch",
+        "external_directory", "experimental_image_generate"
+    ].map((action) => ({ action, resource: "*", effect: "allow" }));
+    const before = JSON.stringify(config);
+    delete config.permission;
+    config.permissions = allowAll;
+    config.experimental = Object.assign({}, config.experimental, { todo: true });
+    if (JSON.stringify(config) !== before) {
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
-        console.log("Set per-tool permission: allow in opencode config");
+        console.log("Wrote v2 permissions (allow) + experimental.todo to opencode config");
     }
 '
 
-# --- Source fnm and bun for interactive shells ---
+# --- Source npm-global and local bins for interactive shells ---
 # Append PATH entries to .bashrc if not already present
-# (Debian's useradd -m copies /etc/skel/.bashrc, so it always exists)
+# (Alpine adduser -D creates ~/.bashrc? guard with -f like before; create if missing)
 PROFILE_FILE="$HOME/.bashrc"
-if [ -f "$PROFILE_FILE" ] && ! grep -q "opencode_env" "$PROFILE_FILE" 2>/dev/null; then
+if ! grep -q "opencode_env" "$PROFILE_FILE" 2>/dev/null; then
     cat >> "$PROFILE_FILE" << 'BASHRCEOF'
 
-# OpenCode environment
-export PATH="$HOME/.opencode/bin:/opt/fnm/aliases/default/bin:$HOME/.local/bin:$PATH"
+# OpenCode environment (opencode_env marker: do not remove)
+export PATH="$HOME/.npm-global/bin:$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF

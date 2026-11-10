@@ -34,7 +34,7 @@ The original deployment used `opencode web` because it was assumed `opencode ser
 
 ### Session Lifecycle Note
 
-Neither mode supports keeping an agent running after the browser tab is closed. The in-progress agent execution is tied to the WebSocket connection. When the tab closes, the session is cancelled (`error=Aborted`). For background execution, use `opencode run --attach` (see ADR-0010).
+Neither mode supports keeping an agent running after the browser tab is closed. The in-progress agent execution is tied to the WebSocket connection. When the tab closes, the session is cancelled (`error=Aborted`). For background execution, use `opencode run --server` (v2; was `--attach` in v1 — see ADR-0010).
 
 ## Decision
 

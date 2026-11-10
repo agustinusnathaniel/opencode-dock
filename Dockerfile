@@ -1,33 +1,24 @@
-FROM debian:bookworm-slim
+# OpenCode v2 remote server, extended from the official image.
+#
+# Base (Alpine + opencode binary) is owned by upstream; this layer adds only
+# the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
+# Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk).
+# Version pin = image tag (single source; see docker-compose.yaml).
+ARG OPENCODE_VERSION=2.2.7
+FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}
 
-# Install system packages and GitHub CLI (stable, rarely changes)
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates git openssh-client \
-    unzip xz-utils procps xdg-utils \
-    && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
-    && apt-get update && apt-get install -y gh \
-    && rm -rf /var/lib/apt/lists/*
+USER root
 
-# Set FNM directory early (before USER switch, so root can create it)
-ENV FNM_DIR=/opt/fnm
+# Agent toolchain (Alpine equivalents of the former Debian set)
+RUN apk add --no-cache \
+    bash curl ca-certificates git github-cli openssh-client \
+    nodejs npm procps xdg-utils \
+    && rm -rf /var/cache/apk/*
 
-# Create non-root user
-RUN useradd -m -s /bin/bash opencode
-
-# Install Node.js via FNM (system-wide, as root)
-RUN mkdir -p ${FNM_DIR} \
-    && curl -fsSL https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-linux.zip -o /tmp/fnm-linux.zip \
-    && unzip /tmp/fnm-linux.zip -d ${FNM_DIR} \
-    && rm /tmp/fnm-linux.zip \
-    && ${FNM_DIR}/fnm install 24 \
-    && ${FNM_DIR}/fnm default 24 \
-    && chown -R opencode:opencode ${FNM_DIR}
-
-# Pre-create workspace directory for volume permissions
-RUN mkdir -p /home/opencode/workspace && chown opencode:opencode /home/opencode/workspace
+# Non-root user (base image runs as root)
+RUN adduser -D -s /bin/bash -h /home/opencode opencode \
+    && mkdir -p /home/opencode/workspace \
+    && chown -R opencode:opencode /home/opencode
 
 # Copy entrypoint to system path (outside home volume)
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
@@ -36,22 +27,19 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # Switch to opencode user for all subsequent commands
 USER opencode
 ENV HOME=/home/opencode
-ENV PATH=/opt/fnm/aliases/default/bin:$PATH
+ENV NPM_CONFIG_PREFIX=/home/opencode/.npm-global
+ENV PATH=/home/opencode/.npm-global/bin:/home/opencode/.opencode/bin:/home/opencode/.local/bin:$PATH
 
-# Enable Corepack for pnpm and yarn
-RUN corepack enable \
+# Enable Corepack for pnpm and yarn (Alpine's nodejs package omits the
+# corepack shim, so bootstrap it via npm; pnpm/yarn versions stay pinned)
+RUN npm install -g corepack \
+    && corepack enable \
     && corepack prepare pnpm@11.9.0 --activate \
     && corepack prepare yarn@4.17.0 --activate
-
-# Install OpenCode (version bumps only bust cache from here)
-ARG OPENCODE_VERSION=1.17.14
-RUN curl -fsSL https://opencode.ai/install | bash -s -- ${OPENCODE_VERSION}
-ENV PATH=/home/opencode/.opencode/bin:$PATH
 
 # Install RTK (Rust Token Killer)
 RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
     && ~/.local/bin/rtk init -g --opencode 2>/dev/null || true
-ENV PATH=/home/opencode/.local/bin:$PATH
 
 # Install CodeGraph, Tokscale, and opencode-wakatime
 RUN --mount=type=cache,target=/home/opencode/.npm,uid=1000,gid=1000,sharing=locked \
@@ -66,7 +54,7 @@ WORKDIR /home/opencode
 EXPOSE 4096
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f -u "${OPENCODE_SERVER_USERNAME:-opencode}:${OPENCODE_SERVER_PASSWORD}" http://localhost:4096/api/health
+  CMD curl -f -u "opencode:${OPENCODE_PASSWORD:-$OPENCODE_SERVER_PASSWORD}" http://localhost:4096/api/info
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

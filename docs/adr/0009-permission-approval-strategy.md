@@ -75,3 +75,13 @@ The entrypoint checks if the current config already has this exact object (or th
 ## Related Decisions
 
 - ADR-0008: Server mode strategy (use `opencode serve`)
+
+## v2 Amendment (OpenCode 2.x)
+
+v2 replaces the `permission` object with an ordered `permissions` array and
+renames actions (`bash`→`shell`, `task`→`subagent`, `write`/`patch`→`edit`).
+`doom_loop` and `lsp` are not v2 Core actions, `todowrite` becomes
+`experimental.todo`, and `external_directory` is allowed by default. The
+entrypoint now writes the native v2 shape and deletes the legacy `permission`
+key (v2 normalizes the old shape with warnings). The v1 object above is
+retained as the historical record. See ADR-0011.

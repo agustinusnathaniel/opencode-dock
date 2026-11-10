@@ -57,4 +57,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
   CMD curl -f -u "opencode:${OPENCODE_PASSWORD:-$OPENCODE_SERVER_PASSWORD}" http://localhost:4096/api/info
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]
+# Absolute image path (not bare `opencode`): an upgraded opencode-home volume
+# may still contain a previous ~/.opencode/bin/opencode that shadows PATH and
+# cannot execute on this base (e.g. v1 glibc binary on Alpine/musl). The server
+# must always be the image-pinned binary.
+CMD ["/usr/local/bin/opencode", "serve", "--hostname", "0.0.0.0", "--port", "4096"]

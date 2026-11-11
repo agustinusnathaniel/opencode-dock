@@ -55,6 +55,36 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
 RUN npm install -g @colbymchenry/codegraph tokscale opencode-wakatime \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
+# CodeGraph's npm launcher execs a vendored glibc-linked Node that cannot run
+# on musl (Alpine: "cannot execute: required file not found"). The bundle's JS
+# runs fine on the image's system Node 24 (verified), so replace the bin shim
+# with a wrapper that resolves the platform bundle at runtime. The shell
+# installer (install.sh) is not an alternative: it fetches the same glibc
+# bundle and installs into $HOME (the shadowed volume) unpinned by default.
+RUN rm -f /opt/npm-global/bin/codegraph && printf '%s\n' \
+    '#!/bin/sh' \
+    '# codegraph ships a glibc-linked node that cannot execute on musl;' \
+    '# run the bundle JS on the image system node instead.' \
+    'for d in /opt/npm-global/lib/node_modules/@colbymchenry/codegraph/node_modules/@colbymchenry/codegraph-*/; do' \
+    '  if [ -f "$d/lib/dist/bin/codegraph.js" ]; then' \
+    '    exec /usr/bin/node "$d/lib/dist/bin/codegraph.js" "$@"' \
+    '  fi' \
+    'done' \
+    'echo "codegraph: platform bundle not found under @colbymchenry" >&2' \
+    'exit 1' \
+    > /opt/npm-global/bin/codegraph \
+    && chmod +x /opt/npm-global/bin/codegraph
+
+# Build-time smoke test: every toolchain binary must execute. A tool that
+# installs but cannot run (e.g. a musl-incompatible bundle) fails the build
+# instead of shipping a broken image.
+RUN pnpm --version \
+    && yarn --version \
+    && codegraph --version \
+    && tokscale --version \
+    && rtk --version \
+    && test -d /opt/npm-global/lib/node_modules/opencode-wakatime
+
 # Switch to opencode user for all subsequent commands
 USER opencode
 ENV HOME=/home/opencode

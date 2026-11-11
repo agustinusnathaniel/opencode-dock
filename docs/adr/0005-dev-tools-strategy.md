@@ -94,3 +94,13 @@ system entries for backward compatibility only. (Later cleanup dropped the
 CodeGraph's npm launcher is replaced at build with a system-Node wrapper (its
 vendored glibc Node cannot execute on musl); a build-time smoke test runs
 every toolchain binary so a broken tool fails the build.
+
+## 2026-11 Note: versions overridable via env (defaults baked in)
+
+All pins above (and the npm-global ones) moved from hardcoded values to
+`ARG <TOOL>_VERSION` with known-good defaults, following the
+`OPENCODE_VERSION` precedent: compose passes `${VAR:-default}` build args, so
+an unset env still builds the tested image, while a set one bumps (or
+downgrades) that tool without a Dockerfile edit. The smoke test stays the
+backstop for bad pins. `RTK_VERSION` uses the install script's native
+`RTK_VERSION=vX.Y.Z` support; the rest are `pkg@version` specifiers.

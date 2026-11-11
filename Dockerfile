@@ -25,6 +25,18 @@ RUN adduser -D -s /bin/bash -h /home/opencode opencode \
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Toolchain version pins. Defaults below are the single source of truth, so a
+# plain `docker build` (or an env that sets none of these) still produces the
+# known-good image; override any of them via Coolify env / compose build args
+# to bump without editing this file. The build smoke test at the bottom
+# executes every binary, so a bad pin fails the build instead of shipping.
+ARG PNPM_VERSION=11.9.0
+ARG YARN_VERSION=4.17.0
+ARG RTK_VERSION=v1.2.0
+ARG CODEGRAPH_VERSION=1.6.2
+ARG TOKSCALE_VERSION=4.21.0
+ARG WAKATIME_VERSION=1.4.0
+
 # System toolchain locations (outside the home volume so named volumes can
 # never shadow them; see ADR-0006). Runtime `npm install -g` still works for
 # the opencode user because /opt/npm-global and /opt/corepack stay writable
@@ -39,20 +51,20 @@ ENV PATH=/opt/npm-global/bin:/usr/local/bin:/home/opencode/.opencode/bin:/home/o
 # HOME-adjacent directory that the home volume shadows.
 RUN npm install -g corepack \
     && corepack enable --install-directory /usr/local/bin \
-    && corepack prepare pnpm@11.9.0 --activate \
-    && corepack prepare yarn@4.17.0 --activate \
+    && corepack prepare pnpm@${PNPM_VERSION} --activate \
+    && corepack prepare yarn@${YARN_VERSION} --activate \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
 # RTK binary to /usr/local/bin (image layer). The installer defaults to
 # $HOME/.local/bin, so relocate it; `rtk init` (config, home volume) runs in
 # the entrypoint on every start instead of here.
-RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh \
+RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | RTK_VERSION=${RTK_VERSION} sh \
     && (test -x /usr/local/bin/rtk || mv /root/.local/bin/rtk /usr/local/bin/rtk) \
     && chmod +x /usr/local/bin/rtk
 
 # Dev-tool binaries to the system npm prefix. MCP/plugin wiring is
 # home-volume state and is ensured by the entrypoint, not baked here.
-RUN npm install -g @colbymchenry/codegraph tokscale opencode-wakatime \
+RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
 # CodeGraph's npm launcher execs a vendored glibc-linked Node that cannot run

@@ -126,6 +126,7 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GIT_USER_EMAIL` | No | Git author email for agent commits. |
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
+| `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
 | `OPENCODE_VERSION` | No | OpenCode version to build (default `2.2.7`). |
 
 ## Updating OpenCode

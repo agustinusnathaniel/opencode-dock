@@ -2,7 +2,7 @@
 #
 # Base (Alpine + opencode binary) is owned by upstream; this layer adds only
 # the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
-# Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk).
+# Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
 ARG OPENCODE_VERSION=2.2.7
 FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}

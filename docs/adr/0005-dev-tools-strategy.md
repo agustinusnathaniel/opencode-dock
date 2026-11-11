@@ -105,6 +105,7 @@ an unset env still builds the tested image, while a set one bumps (or
 downgrades) that tool without a Dockerfile edit. The smoke test stays the
 backstop for bad pins. `RTK_VERSION` uses the install script's native
 `RTK_VERSION=vX.Y.Z` support; the rest are `pkg@version` specifiers.
+
 ## v2.2 Note (2026-11-11: Claude Code CLI)
 
 `@anthropic-ai/claude-code` (pinned 2.1.322) joined the system prefix so the

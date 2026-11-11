@@ -150,18 +150,20 @@ if [ ! -d "/opt/npm-global/lib/node_modules/opencode-wakatime" ]; then
 fi
 unset _cmd
 
-# --- Interactive-shell PATH: system toolchain first, home compat after ---
+# --- Interactive-shell PATH: system toolchain first, then user dirs ---
 # Binaries live in the image (/opt/npm-global/bin, /usr/local/bin) so home
-# volumes can never shadow them (ADR-0006). The server process itself inherits
-# PATH from the Dockerfile ENV; this block is only for interactive shells.
-# Migration guard keys on the path, not the old marker: volumes created before
-# the /opt move carry the v1 block without system entries.
+# volumes can never shadow them (ADR-0006). ~/.opencode/bin (opencode
+# self-updates) and ~/.local/bin (XDG user dir) stay on PATH after the system
+# entries. The server process itself inherits PATH from the Dockerfile ENV;
+# this block is only for interactive shells.
+# Migration guard keys on the system path: volumes created before the /opt
+# move already carry an equivalent block, which is left untouched (inert).
 PROFILE_FILE="$HOME/.bashrc"
 if ! grep -q "/opt/npm-global/bin" "$PROFILE_FILE" 2>/dev/null; then
     cat >> "$PROFILE_FILE" << 'BASHRCEOF'
 
 # OpenCode system toolchain (opencode_env_v2 marker: do not remove)
-export PATH="/opt/npm-global/bin:/usr/local/bin:$HOME/.npm-global/bin:$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
+export PATH="/opt/npm-global/bin:/usr/local/bin:$HOME/.opencode/bin:$HOME/.local/bin:$PATH"
 export PNPM_HOME="$HOME/.local/share/pnpm"
 export PATH="$PNPM_HOME:$PATH"
 BASHRCEOF
@@ -179,23 +181,6 @@ if ! touch "$HOME/workspace/.write-test" 2>/dev/null; then
     fi
 else
     rm -f "$HOME/workspace/.write-test"
-fi
-
-# --- Remove stale server binary shadowing PATH (automatic v1->v2 repair) ---
-# An upgraded opencode-home volume may contain a previous
-# ~/.opencode/bin/opencode that precedes /usr/local/bin in PATH but cannot
-# execute on this base (e.g. v1 glibc binary on Alpine/musl). Probe it:
-# `opencode --version` is a pure print with no side effects (verified), so a
-# working binary answers instantly and is left alone (e.g. from
-# `opencode upgrade`); anything else is removed so PATH falls through to the
-# image-pinned binary. Fail-open: removal failure never blocks server start
-# (CMD uses the absolute image path regardless).
-STALE_BIN="$HOME/.opencode/bin/opencode"
-if [ -f "$STALE_BIN" ]; then
-    if ! "$STALE_BIN" --version >/dev/null 2>&1; then
-        echo "Removing stale/unusable server binary at ~/.opencode/bin/opencode."
-        rm -f "$STALE_BIN" || echo "WARNING: Could not remove stale server binary."
-    fi
 fi
 
 # --- Execute the main command ---

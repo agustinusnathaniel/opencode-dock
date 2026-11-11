@@ -1,5 +1,11 @@
 # ADR-0006: Container Volume Strategy
 
+> **Current state (2026-11):** tool binaries live in the image (`/opt`,
+> `/usr/local/bin`) and refresh on every rebuild — deleting `opencode-home`
+> is no longer needed for tool updates. The wipe-to-refresh tradeoff
+> discussed below is historical context; the nested-volume layout itself is
+> unchanged. See the amendment at the bottom.
+
 ## Status
 
 Accepted

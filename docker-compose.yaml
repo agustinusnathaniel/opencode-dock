@@ -4,8 +4,15 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # Single version source (Dockerfile default is a fallback only).
+        # Single version source per tool: Dockerfile ARG defaults are the
+        # fallback, so leaving an env unset still builds the known-good image.
         OPENCODE_VERSION: ${OPENCODE_VERSION:-2.2.7}
+        PNPM_VERSION: ${PNPM_VERSION:-12.19.0}
+        YARN_VERSION: ${YARN_VERSION:-4.18.1}
+        RTK_VERSION: ${RTK_VERSION:-v1.2.0}
+        CODEGRAPH_VERSION: ${CODEGRAPH_VERSION:-1.6.2}
+        TOKSCALE_VERSION: ${TOKSCALE_VERSION:-4.21.0}
+        WAKATIME_VERSION: ${WAKATIME_VERSION:-1.4.0}
     mem_limit: 4g
     cpus: "3"
     environment:

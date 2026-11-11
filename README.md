@@ -51,6 +51,31 @@ Adjust in Coolify's UI if needed.
 
 Coolify will pull the repo, pull the pinned OpenCode base image plus the toolchain layers, and start the container. The first build may take a few minutes.
 
+## Deploying with plain Docker (no Coolify)
+
+The same compose file runs on any host with Docker Engine and the Compose plugin — nothing in it is Coolify-specific (Coolify just provides the TLS proxy, DNS, and env UI around it).
+
+1. Clone this repo onto your Docker host.
+2. Copy the env template and fill in at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`:
+   ```bash
+   cp .env.example .env
+   # edit .env
+   ```
+3. Build and start:
+   ```bash
+   docker compose up -d --build
+   ```
+   The first build takes a few minutes. Named volumes (`opencode-home`, `opencode-workspace`) are created automatically.
+4. Open `http://<host>:4096` (LAN-only), or put it behind your own reverse proxy for HTTPS. With Caddy, for example:
+   ```
+   opencode.yourdomain.com {
+       reverse_proxy localhost:4096
+   }
+   ```
+   (requires a DNS A record pointing at the host; Caddy provisions the certificate automatically).
+
+To update: `git pull`, then `docker compose up -d --build`. Password, provider keys, and tool versions are all env-driven — see `.env.example`.
+
 ## Included Tools
 
 The Docker image ships with these tools pre-installed:

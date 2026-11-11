@@ -2,11 +2,13 @@
 
 Deploy an OpenCode server on your own VPS. Uses Coolify for hosting and Cloudflare for DNS and optional auth. This setup gives you a remote agent workspace you can connect to from the OpenCode desktop client or browser, without leaving your infrastructure.
 
-## Prerequisites
+## Prerequisites (Coolify path)
 
 - A VPS with [Coolify](https://coolify.io/) installed and running
 - A domain managed by Cloudflare (DNS proxied through Cloudflare -- orange cloud enabled)
 - Basic familiarity with Coolify deployments (adding resources, setting domains, configuring env vars)
+
+(Deploying with plain Docker instead? Skip these — see [Deploying with plain Docker](#deploying-with-plain-docker-no-coolify): any Docker host, a DNS record or LAN access, and TLS from your own reverse proxy.)
 
 ## Architecture
 
@@ -278,7 +280,7 @@ CodeGraph, Tokscale, the WakaTime plugin, and RTK are pre-installed in the image
 - The container runs as a non-root user with dropped Linux capabilities (`no-new-privileges`, `cap_drop: ALL`).
 - Cloudflare's DNS proxy hides your VPS IP address from direct attacks.
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
-- No container ports are exposed beyond what Coolify's reverse proxy handles.
+- No container ports are exposed beyond what your reverse proxy handles (Coolify's proxy on the Coolify path; your own proxy or LAN firewall on the plain-Docker path — never expose 4096 directly to the internet).
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
 - Persistent volumes store user config and data; the system toolchain (Node.js,
   entrypoint, pnpm/yarn shims, codegraph/tokscale/wakatime in `/opt`, rtk in

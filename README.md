@@ -139,7 +139,7 @@ OpenCode v2 has two distinct usage modes with different session lifecycle behavi
 
 ### Web UI (Interactive)
 
-Open `https://opencode.sznm.cloud` in your browser. Agent execution streams in real-time. **Keep the tab open** — closing it while an agent is running cancels the in-progress execution.
+Open `https://opencode.yourdomain.com` in your browser. Agent execution streams in real-time. **Keep the tab open** — closing it while an agent is running cancels the in-progress execution.
 
 ```
 Best for: quick tasks, interactive debugging, reviewing results
@@ -153,13 +153,13 @@ Use `opencode run --server` to run tasks headlessly against the running server. 
 ```bash
 # From your local machine:
 opencode run "Refactor the auth module" \
-  --server https://opencode.sznm.cloud \
+  --server https://opencode.yourdomain.com \
   --auto \
   -p "$OPENCODE_PASSWORD"
 
 # Continue the last session:
 opencode run --continue \
-  --server https://opencode.sznm.cloud \
+  --server https://opencode.yourdomain.com \
   --auto -p "$OPENCODE_PASSWORD"
 
 # From inside the container (via SSH):

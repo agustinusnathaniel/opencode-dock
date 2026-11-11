@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This directory contains Architecture Decision Records (ADRs) for the my-remote-opencode project — a deployment configuration for running a remote OpenCode server on a VPS with Coolify and Cloudflare.
+This directory contains Architecture Decision Records (ADRs) for the opencode-dock project — a deployment configuration for running a remote OpenCode server on a VPS with Coolify and Cloudflare.
 
 | ADR | Title | Status |
 |-----|-------|--------|

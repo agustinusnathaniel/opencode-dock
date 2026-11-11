@@ -1,4 +1,4 @@
-# my-remote-opencode
+# opencode-dock
 
 Deploy an OpenCode server on your own VPS. Uses Coolify for hosting and Cloudflare for DNS and optional auth. This setup gives you a remote agent workspace you can connect to from the OpenCode desktop client or browser, without leaving your infrastructure.
 

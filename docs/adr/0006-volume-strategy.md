@@ -178,6 +178,26 @@ version from the current image.
 - If the home volume grows large (4GB+ SQLite DB + caches),
   deleting it on version bumps means losing that data
 
+## Amendment 2026-11-10: toolchain moved out of `$HOME` (no more wipe-to-refresh)
+
+The v2 image initially installed npm-global tools (`~/.npm-global`) and
+`~/.local/bin/rtk` as the `opencode` user, i.e. back inside the home volume —
+reintroducing the Attempt-2 shadowing bug for exactly those binaries
+(`pnpm`/`corepack`, `codegraph`, `tokscale`, `wakatime`, `rtk` missing after a
+rebuild onto an existing volume; reproduced 2026-11-10).
+
+Fix (proper, not a reinstall script): binaries now live in the image outside
+both volumes — npm globals in `/opt/npm-global` (`NPM_CONFIG_PREFIX`),
+Corepack activations in `/opt/corepack` (`COREPACK_HOME`), shims in
+`/usr/local/bin` (`corepack enable --install-directory`), `rtk` relocated to
+`/usr/local/bin`. `PATH` orders system entries before the retained
+`~/.npm-global/bin` / `~/.local/bin` compat entries. MCP/plugin *wiring*
+(`codegraph install`, `rtk init`) is home-volume state and is ensured
+idempotently by the entrypoint on every start instead of baked at build time.
+
+Consequence change: refreshing tool versions no longer requires deleting
+`opencode-home`. The nested-volume layout above is unchanged.
+
 ## Related Decisions
 
 - ADR-0001: Ingress strategy (Coolify proxy + Cloudflare DNS)

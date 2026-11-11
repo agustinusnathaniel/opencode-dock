@@ -81,3 +81,11 @@ name), fnm → Alpine Node (v24.x at last probe), and the current image carries
 neither Bun nor build-essential. Source column above is the v1 historical
 record.
 - ADR-0004: Container security (build-essential includes compilers — no security concern, they're used at runtime)
+
+## v2.1 Note (2026-11-10: binaries out of `$HOME`, ADR-0006 amendment)
+
+npm-global tools moved from `~/.npm-global` (home volume, shadowed on rebuild)
+to the system prefix `/opt/npm-global`; `rtk` moved from `~/.local/bin` to
+`/usr/local/bin`. MCP/plugin *wiring* stays home-volume state, ensured by the
+entrypoint. `~/.npm-global/bin` and `~/.local/bin` remain on `PATH` after the
+system entries for backward compatibility only.

@@ -2,11 +2,13 @@
 
 Deploy an OpenCode server on your own VPS. Uses Coolify for hosting and Cloudflare for DNS and optional auth. This setup gives you a remote agent workspace you can connect to from the OpenCode desktop client or browser, without leaving your infrastructure.
 
-## Prerequisites
+## Prerequisites (Coolify path)
 
 - A VPS with [Coolify](https://coolify.io/) installed and running
 - A domain managed by Cloudflare (DNS proxied through Cloudflare -- orange cloud enabled)
 - Basic familiarity with Coolify deployments (adding resources, setting domains, configuring env vars)
+
+(Deploying with plain Docker instead? Skip these — see [Deploying with plain Docker](#deploying-with-plain-docker-no-coolify): any Docker host, a DNS record or LAN access, and TLS from your own reverse proxy.)
 
 ## Architecture
 
@@ -50,6 +52,31 @@ Adjust in Coolify's UI if needed.
 6. Deploy.
 
 Coolify will pull the repo, pull the pinned OpenCode base image plus the toolchain layers, and start the container. The first build may take a few minutes.
+
+## Deploying with plain Docker (no Coolify)
+
+The same compose file runs on any host with Docker Engine and the Compose plugin — nothing in it is Coolify-specific (Coolify just provides the TLS proxy, DNS, and env UI around it).
+
+1. Clone this repo onto your Docker host.
+2. Copy the env template and fill in at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`:
+   ```bash
+   cp .env.example .env
+   # edit .env
+   ```
+3. Build and start:
+   ```bash
+   docker compose up -d --build
+   ```
+   The first build takes a few minutes. Named volumes (`opencode-home`, `opencode-workspace`) are created automatically.
+4. Open `http://<host>:4096` (LAN-only), or put it behind your own reverse proxy for HTTPS. With Caddy, for example:
+   ```
+   opencode.yourdomain.com {
+       reverse_proxy localhost:4096
+   }
+   ```
+   (requires a DNS A record pointing at the host; Caddy provisions the certificate automatically).
+
+To update: `git pull`, then `docker compose up -d --build`. Password, provider keys, and tool versions are all env-driven — see `.env.example`.
 
 ## Included Tools
 
@@ -253,7 +280,7 @@ CodeGraph, Tokscale, the WakaTime plugin, and RTK are pre-installed in the image
 - The container runs as a non-root user with dropped Linux capabilities (`no-new-privileges`, `cap_drop: ALL`).
 - Cloudflare's DNS proxy hides your VPS IP address from direct attacks.
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
-- No container ports are exposed beyond what Coolify's reverse proxy handles.
+- No container ports are exposed beyond what your reverse proxy handles (Coolify's proxy on the Coolify path; your own proxy or LAN firewall on the plain-Docker path — never expose 4096 directly to the internet).
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
 - Persistent volumes store user config and data; the system toolchain (Node.js,
   entrypoint, pnpm/yarn shims, codegraph/tokscale/wakatime in `/opt`, rtk in

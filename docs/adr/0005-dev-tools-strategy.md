@@ -89,3 +89,6 @@ to the system prefix `/opt/npm-global`; `rtk` moved from `~/.local/bin` to
 `/usr/local/bin`. MCP/plugin *wiring* stays home-volume state, ensured by the
 entrypoint. `~/.npm-global/bin` and `~/.local/bin` remain on `PATH` after the
 system entries for backward compatibility only.
+CodeGraph's npm launcher is replaced at build with a system-Node wrapper (its
+vendored glibc Node cannot execute on musl); a build-time smoke test runs
+every toolchain binary so a broken tool fails the build.

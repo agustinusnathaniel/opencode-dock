@@ -86,6 +86,7 @@ The Docker image ships with these tools pre-installed:
 - **Package managers:** pnpm 12.19.0, yarn 4.18.1 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph` 1.6.2), Rust Token Killer (`rtk` v1.2.0)
+- **Agent CLIs:** Claude Code (`claude`, pinned 2.1.322, musl-compatible) — needs `CLAUDE_CODE_OAUTH_TOKEN` to connect your Claude plan
 - **AI coding tools:** Tokscale (`tokscale` 4.21.0), WakaTime plugin (`opencode-wakatime` 1.4.0)
 
 All versions above are defaults: override any of them with a `<TOOL>_VERSION`
@@ -125,6 +126,7 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GIT_USER_EMAIL` | No | Git author email for agent commits. |
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
+| `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
 | `OPENCODE_VERSION` | No | OpenCode version to build (default `2.2.7`). |
 
 ## Updating OpenCode
@@ -230,6 +232,20 @@ opencode --server https://opencode.yourdomain.com
 ```
 
 You will be prompted for the `OPENCODE_PASSWORD`. Enter it and you are connected.
+
+## Connect Claude Agent (Optional)
+
+The OpenCode UI offers a **Connect Claude Agent** button, which uses your Claude plan (or another Claude Code login) via the pre-installed `claude` CLI. Browser login doesn't work on a headless server, so generate a long-lived token instead:
+
+1. On your local machine (with a browser), install Claude Code and run:
+   ```bash
+   claude setup-token
+   ```
+   Complete the login in the browser; the command prints a token.
+2. Add the token as the `CLAUDE_CODE_OAUTH_TOKEN` environment variable in Coolify and redeploy.
+3. In the OpenCode UI, use **Connect Claude Agent** — it now has credentials to connect with.
+
+Do not set `ANTHROPIC_API_KEY` on this deployment: an API key takes precedence over the plan login and would bill API usage instead.
 
 ## SSH Key Setup (Optional)
 

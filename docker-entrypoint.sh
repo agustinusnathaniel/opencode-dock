@@ -135,10 +135,14 @@ if command -v rtk >/dev/null 2>&1; then
 else
     echo "WARNING: rtk binary missing (expected in /usr/local/bin; image layer incomplete?)." >&2
 fi
-for _cmd in pnpm yarn tokscale; do
+for _cmd in pnpm yarn tokscale claude; do
     command -v "$_cmd" >/dev/null 2>&1 \
         || echo "WARNING: $_cmd binary missing (image layer incomplete?)." >&2
 done
+if command -v claude >/dev/null 2>&1 && [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+    echo "NOTE: CLAUDE_CODE_OAUTH_TOKEN is unset, so 'Connect Claude Agent' has nothing to connect with." >&2
+    echo "      On a machine with a browser run 'claude setup-token', then set it as env (see .env.example)." >&2
+fi
 if [ ! -d "/opt/npm-global/lib/node_modules/opencode-wakatime" ]; then
     echo "WARNING: opencode-wakatime package missing in /opt/npm-global (image layer incomplete?)." >&2
 fi

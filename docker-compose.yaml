@@ -13,6 +13,7 @@ services:
         CODEGRAPH_VERSION: ${CODEGRAPH_VERSION:-1.6.2}
         TOKSCALE_VERSION: ${TOKSCALE_VERSION:-4.21.0}
         WAKATIME_VERSION: ${WAKATIME_VERSION:-1.4.0}
+        CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-2.1.322}
     mem_limit: 4g
     cpus: "3"
     environment:
@@ -27,6 +28,10 @@ services:
       - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
+      # Long-lived Claude Code OAuth token for "Connect Claude Agent" (headless
+      # servers can't do the browser login). Generate on a machine with a
+      # browser: `claude setup-token`. Billed to your Claude plan.
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN:-}
     volumes:
       - opencode-home:/home/opencode
       - opencode-workspace:/home/opencode/workspace

@@ -26,7 +26,7 @@ Coolify Proxy (Caddy/Traefik + Let's Encrypt SSL)
 OpenCode Server (port 4096, inside Docker)
   |
   | Entrypoint: /usr/local/bin/docker-entrypoint.sh
-  |  • Adopts OPENCODE_PASSWORD (falls back to legacy OPENCODE_SERVER_PASSWORD)
+  |  • Adopts OPENCODE_PASSWORD (fails fast when unset)
   |  • Injects SSH key from SSH_PRIVATE_KEY env var
   |  • Writes provider keys to auth.json (OPENCODE_GO_API_KEY / ZEN_API_KEY)
   |  • Writes native v2 permissions (allow-all for headless) + experimental.todo
@@ -87,7 +87,6 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `OPENCODE_PASSWORD` | Yes | Password for the web UI and API (v2 canonical name; basic-auth username is always `opencode`). Set a strong one. |
-| `OPENCODE_SERVER_PASSWORD` | No | Legacy v1 name, still honored as fallback when `OPENCODE_PASSWORD` is unset. |
 | `OPENCODE_GO_API_KEY` | Yes | API key for the OpenCode Go provider. |
 | `OPENCODE_ZEN_API_KEY` | No | Falls back to `OPENCODE_GO_API_KEY` if not set. Same key works for both. |
 | `SSH_PRIVATE_KEY` | No | Private key for agents to push/pull code. Supports single-line and multi-line formats. |

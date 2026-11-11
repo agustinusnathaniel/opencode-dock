@@ -11,9 +11,8 @@ services:
     environment:
       - NODE_NO_WARNINGS=1
       # v2 canonical password (username is always `opencode`; there is no
-      # OPENCODE_SERVER_USERNAME in v2). Legacy name still honored as fallback.
+      # OPENCODE_SERVER_USERNAME in v2).
       - OPENCODE_PASSWORD=${OPENCODE_PASSWORD:-}
-      - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD:-}
       - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY:?error}
       - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY:-}
       - SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY:-}
@@ -21,7 +20,6 @@ services:
       - GIT_USER_EMAIL=${GIT_USER_EMAIL:-}
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - WAKATIME_API_KEY=${WAKATIME_API_KEY:-}
-      - WAKATIME_HOME=/home/opencode/.local/share/wakatime
     volumes:
       - opencode-home:/home/opencode
       - opencode-workspace:/home/opencode/workspace
@@ -38,7 +36,7 @@ services:
     healthcheck:
       # v2 removed /api/health (404); /api/info returns 200 when authenticated.
       # $$ escapes to a literal $ for the in-container shell fallback.
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$${OPENCODE_PASSWORD:-$$OPENCODE_SERVER_PASSWORD}\" http://localhost:4096/api/info | grep -q 200"]
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200"]
       interval: 15s
       timeout: 5s
       retries: 2

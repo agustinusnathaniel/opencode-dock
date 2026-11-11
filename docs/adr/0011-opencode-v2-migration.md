@@ -109,7 +109,10 @@ silently install latest instead of the pin).
 - Pinned v2 installs actually install the pinned version (the `--version` flag
   fix).
 - Existing Coolify envs (`OPENCODE_SERVER_PASSWORD`) keep working; new setups
-  use `OPENCODE_PASSWORD`.
+  use `OPENCODE_PASSWORD`. (2026-11: the legacy fallback was later removed
+  from this deployment's entrypoint/compose/healthcheck — `OPENCODE_PASSWORD`
+  only. The upstream server still honors the legacy name, but it is no longer
+  passed through, so a legacy-only env now fails fast at startup.)
 - No config-migration warnings in server logs; headless auto-approve preserved.
 - Healthcheck reflects v2 reality (`/api/info` → 200).
 

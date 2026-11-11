@@ -110,3 +110,9 @@ otherwise. `OPENCODE_SERVER_USERNAME` is no longer supported (username is
 always `opencode`); `OPENCODE_PASSWORD` is canonical and
 `OPENCODE_SERVER_PASSWORD` still works as fallback. See ADR-0011. The `CMD`
 snippets above are retained as the v1 historical record.
+
+2026-11 note: the legacy password fallback was removed from this deployment
+(entrypoint, compose env, and healthcheck now use `OPENCODE_PASSWORD` only),
+and the redundant Dockerfile `HEALTHCHECK` was deleted — the compose
+healthcheck is the single definition (compose overrides the image value, so
+two definitions could never both apply).

@@ -3,17 +3,11 @@
 set -e
 
 # --- Server password (OpenCode v2) ---
-# Canonical: OPENCODE_PASSWORD. Legacy OPENCODE_SERVER_PASSWORD is still
-# honored by the server and adopted here. v2 has no OPENCODE_SERVER_USERNAME;
+# Canonical and only: OPENCODE_PASSWORD. v2 has no OPENCODE_SERVER_USERNAME;
 # the username is always `opencode`.
 if [ -z "${OPENCODE_PASSWORD:-}" ]; then
-    if [ -n "${OPENCODE_SERVER_PASSWORD:-}" ]; then
-        export OPENCODE_PASSWORD="$OPENCODE_SERVER_PASSWORD"
-        echo "Using legacy OPENCODE_SERVER_PASSWORD (consider renaming to OPENCODE_PASSWORD)."
-    else
-        echo "ERROR: Set OPENCODE_PASSWORD (or legacy OPENCODE_SERVER_PASSWORD) before starting." >&2
-        exit 1
-    fi
+    echo "ERROR: Set OPENCODE_PASSWORD before starting." >&2
+    exit 1
 fi
 
 # --- OpenCode provider auth ---

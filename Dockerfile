@@ -99,8 +99,9 @@ WORKDIR /home/opencode
 
 EXPOSE 4096
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f -u "opencode:${OPENCODE_PASSWORD:-$OPENCODE_SERVER_PASSWORD}" http://localhost:4096/api/info
+# No Dockerfile HEALTHCHECK: docker-compose.yaml defines the single healthcheck
+# (compose overrides the image value whenever both exist), so one definition
+# lives there and none can drift.
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # Absolute image path (not bare `opencode`): an upgraded opencode-home volume

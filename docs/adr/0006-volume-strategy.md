@@ -197,7 +197,8 @@ both volumes — npm globals in `/opt/npm-global` (`NPM_CONFIG_PREFIX`),
 Corepack activations in `/opt/corepack` (`COREPACK_HOME`), shims in
 `/usr/local/bin` (`corepack enable --install-directory`), `rtk` relocated to
 `/usr/local/bin`. `PATH` orders system entries before the retained
-`~/.npm-global/bin` / `~/.local/bin` compat entries. MCP/plugin *wiring*
+`~/.npm-global/bin` / `~/.local/bin` compat entries. (Later cleanup removed
+the `~/.npm-global/bin` entry; `~/.opencode/bin` and `~/.local/bin` remain.) MCP/plugin *wiring*
 (`codegraph install`, `rtk init`) is home-volume state and is ensured
 idempotently by the entrypoint on every start instead of baked at build time.
 

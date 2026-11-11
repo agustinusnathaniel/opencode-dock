@@ -36,6 +36,7 @@ ARG RTK_VERSION=v1.2.0
 ARG CODEGRAPH_VERSION=1.6.2
 ARG TOKSCALE_VERSION=4.21.0
 ARG WAKATIME_VERSION=1.4.0
+ARG CLAUDE_CODE_VERSION=2.1.322
 
 # System toolchain locations (outside the home volume so named volumes can
 # never shadow them; see ADR-0006). Runtime `npm install -g` still works for
@@ -64,7 +65,10 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
 
 # Dev-tool binaries to the system npm prefix. MCP/plugin wiring is
 # home-volume state and is ensured by the entrypoint, not baked here.
-RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} \
+# Claude Code is pinned exact like pnpm/yarn; it ships musl builds
+# (@anthropic-ai/claude-code-linux-x64-musl), so no wrapper is needed —
+# the build smoke test below proves it by executing the binary.
+RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
 # CodeGraph's npm launcher execs a vendored glibc-linked Node that cannot run
@@ -95,6 +99,7 @@ RUN pnpm --version \
     && codegraph --version \
     && tokscale --version \
     && rtk --version \
+    && claude --version \
     && test -d /opt/npm-global/lib/node_modules/opencode-wakatime
 
 # Switch to opencode user for all subsequent commands

@@ -32,7 +32,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # ephemeral — project-local installs persist via the workspace volume.
 ENV NPM_CONFIG_PREFIX=/opt/npm-global
 ENV COREPACK_HOME=/opt/corepack
-ENV PATH=/opt/npm-global/bin:/usr/local/bin:/home/opencode/.npm-global/bin:/home/opencode/.opencode/bin:/home/opencode/.local/bin:$PATH
+ENV PATH=/opt/npm-global/bin:/usr/local/bin:/home/opencode/.opencode/bin:/home/opencode/.local/bin:$PATH
 
 # Corepack shims go to /usr/local/bin (image layer) and activations to
 # $COREPACK_HOME (/opt); a bare `corepack enable` would target a
@@ -89,11 +89,11 @@ RUN pnpm --version \
 USER opencode
 ENV HOME=/home/opencode
 
-# Create config/data directories (home-volume state). ~/.npm-global/bin and
-# ~/.local/bin stay on PATH for backward compatibility with pre-existing
-# volume contents and manual installs; system tools take precedence via PATH
-# order (see ENV above).
-RUN mkdir -p ~/.config/opencode ~/.local/share/opencode ~/.npm-global/bin ~/.local/bin
+# Create config/data directories (home-volume state). ~/.opencode/bin is
+# opencode's own self-update location and ~/.local/bin is the conventional
+# user bin dir; both stay on PATH after the system entries. The obsolete
+# ~/.npm-global prefix is intentionally absent: globals live in /opt.
+RUN mkdir -p ~/.config/opencode ~/.local/share/opencode ~/.local/bin
 
 WORKDIR /home/opencode
 

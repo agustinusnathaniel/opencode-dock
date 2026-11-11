@@ -48,7 +48,7 @@ Apply all applicable hardening measures, **except read-only root filesystem**:
 | `cap_drop: ALL` | ✅ docker-compose.yml |
 | `no-new-privileges:true` | ✅ docker-compose.yml |
 | Read-only filesystem | ❌ Removed — conflicts with entrypoint |
-| tmpfs for /tmp | ✅ docker-compose.yml |
+| tmpfs for /tmp | ❌ removed 2026-11 (see amendment; was `✅ docker-compose.yml`) |
 
 The non-root user + `cap_drop: ALL` + `no-new-privileges:true` combination already covers the most critical container breakout vectors. Read-only filesystem would be a meaningful addition but is incompatible with the entrypoint's writes.
 
@@ -59,7 +59,8 @@ The non-root user + `cap_drop: ALL` + `no-new-privileges:true` combination alrea
 - Container cannot escalate privileges (`no-new-privileges`)
 - Container has zero kernel capabilities (`cap_drop: ALL`)
 - Container runs without root privileges (non-root user)
-- `/tmp` is ephemeral and doesn't persist across restarts
+- `/tmp` is ephemeral across redeploys (container writable layer; unlike the
+  removed tmpfs mount, it survives plain container restarts — see amendment)
 - Entrypoint can write SSH keys and git config at runtime
 
 ### Negative
@@ -70,6 +71,14 @@ The non-root user + `cap_drop: ALL` + `no-new-privileges:true` combination alrea
 
 - If the container is compromised, the attacker gains a non-root shell with no capabilities — minimal host impact
 - Secrets (SSH key) are in a Docker volume and environment variable — not in the image
+
+## Amendment 2026-11: `/tmp` tmpfs removed
+
+Docker mounts `tmpfs` with `noexec`, which broke agent workflows that execute
+via `/tmp` (`mktemp -d` install patterns fail with Permission denied).
+`/tmp` now falls back to the container writable layer: still ephemeral across
+redeploys and still guarded by non-root + `no-new-privileges` + `cap_drop:
+ALL`. The table row above is historical.
 
 ## Related Decisions
 

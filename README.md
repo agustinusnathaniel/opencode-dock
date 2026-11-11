@@ -56,7 +56,7 @@ Coolify will pull the repo, pull the pinned OpenCode base image plus the toolcha
 The Docker image ships with these tools pre-installed:
 
 - **Runtime:** Node.js (Alpine apk), npm
-- **Package managers:** pnpm 11.9.0, yarn 4.17.0 (via Corepack)
+- **Package managers:** pnpm 12.19.0, yarn 4.18.1 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph` 1.6.2), Rust Token Killer (`rtk` v1.2.0)
 - **AI coding tools:** Tokscale (`tokscale` 4.21.0), WakaTime plugin (`opencode-wakatime` 1.4.0)

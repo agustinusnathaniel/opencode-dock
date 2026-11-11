@@ -38,9 +38,9 @@ Options: install pnpm and yarn directly via npm, use Corepack, or install stand-
 
 ## Decision
 
-Use **Corepack** to enable pnpm (11.9.0) and yarn (4.17.0). This runs in the Dockerfile toolchain layer.
+Use **Corepack** to enable pnpm (12.19.0) and yarn (4.18.1). This runs in the Dockerfile toolchain layer.
 
-Versions are pinned explicitly in the Dockerfile to prevent surprise breakage from upstream releases.
+Versions are pinned explicitly in the Dockerfile to prevent surprise breakage from upstream releases. Since 2026-11 the pins live in `ARG <TOOL>_VERSION` defaults, overridable per-build via compose env (previously hardcoded 11.9.0/4.17.0).
 
 ## Amendment 2026-11-10: shims and activations live outside `$HOME`
 

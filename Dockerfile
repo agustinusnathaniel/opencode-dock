@@ -30,8 +30,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # known-good image; override any of them via Coolify env / compose build args
 # to bump without editing this file. The build smoke test at the bottom
 # executes every binary, so a bad pin fails the build instead of shipping.
-ARG PNPM_VERSION=11.9.0
-ARG YARN_VERSION=4.17.0
+ARG PNPM_VERSION=12.19.0
+ARG YARN_VERSION=4.18.1
 ARG RTK_VERSION=v1.2.0
 ARG CODEGRAPH_VERSION=1.6.2
 ARG TOKSCALE_VERSION=4.21.0

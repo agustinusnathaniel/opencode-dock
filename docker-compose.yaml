@@ -44,10 +44,7 @@ services:
       - ALL
     restart: unless-stopped
     ports:
-      # Loopback only by default: Docker-published ports bypass host firewalls
-      # like UFW, so 0.0.0.0 would put plain-HTTP basic auth on the internet.
-      # Coolify's proxy reaches the container over the Docker network and does
-      # not need this mapping. Set OPENCODE_BIND=0.0.0.0 for LAN-only access.
+      # Loopback by default: Docker bypasses UFW.
       - ${OPENCODE_BIND:-127.0.0.1}:4096:4096
     healthcheck:
       # v2 removed /api/health (404); /api/info returns 200 when authenticated.

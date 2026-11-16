@@ -68,7 +68,7 @@ The same compose file runs on any host with Docker Engine and the Compose plugin
    docker compose up -d --build
    ```
    The first build takes a few minutes. Named volumes (`opencode-home`, `opencode-workspace`) are created automatically.
-4. Open `http://<host>:4096` (LAN-only), or put it behind your own reverse proxy for HTTPS. With Caddy, for example:
+4. The port binds to `127.0.0.1:4096` by default, so it is reachable only from the host itself. Put it behind your own reverse proxy for HTTPS, or use an SSH tunnel (`ssh -L 4096:localhost:4096 <host>`, then open `http://localhost:4096`). For LAN-only access on a trusted network, set `OPENCODE_BIND=0.0.0.0` in `.env`. With Caddy, for example:
    ```
    opencode.yourdomain.com {
        reverse_proxy localhost:4096
@@ -296,7 +296,7 @@ CodeGraph, Tokscale, the WakaTime plugin, and RTK are pre-installed in the image
 - The container runs as a non-root user with dropped Linux capabilities (`no-new-privileges`, `cap_drop: ALL`).
 - Cloudflare's DNS proxy hides your VPS IP address from direct attacks.
 - Cloudflare Access adds an SSO auth layer before traffic reaches your server (recommended).
-- No container ports are exposed beyond what your reverse proxy handles (Coolify's proxy on the Coolify path; your own proxy or LAN firewall on the plain-Docker path — never expose 4096 directly to the internet).
+- No container ports are exposed beyond what your reverse proxy handles (Coolify's proxy on the Coolify path; your own proxy or LAN firewall on the plain-Docker path — never expose 4096 directly to the internet). Port 4096 is published on `127.0.0.1` only by default (`OPENCODE_BIND`), because Docker-published ports bypass host firewalls such as UFW.
 - SSH keys are injected at runtime via environment variables, never baked into the Docker image.
 - Persistent volumes store user config and data; the system toolchain (Node.js,
   entrypoint, pnpm/yarn shims, codegraph/tokscale/wakatime in `/opt`, rtk in

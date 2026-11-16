@@ -44,7 +44,8 @@ services:
       - ALL
     restart: unless-stopped
     ports:
-      - 4096:4096
+      # Loopback by default: Docker bypasses UFW.
+      - ${OPENCODE_BIND:-127.0.0.1}:4096:4096
     healthcheck:
       # v2 removed /api/health (404); /api/info returns 200 when authenticated.
       # $$ escapes to a literal $ for the in-container shell fallback.

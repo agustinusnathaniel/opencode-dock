@@ -135,3 +135,16 @@ bare `${VAR}`: Coolify forwards env vars as build args even when blank (seen
 broke `FROM` with an empty tag), and `:-` makes blank behave as unset. rtk is
 the exception: its installer treats any set `RTK_VERSION` as a literal tag,
 so a blank value intentionally floats to its auto-latest instead of the pin.
+
+## 2026-11-17 Correction: `OPENCODE_VERSION` re-pinned (docker tag `latest` is v1)
+
+`OPENCODE_VERSION` no longer defaults to `latest`: the base image's `latest`
+tag was observed resolving to `1.19.6` (v1), while the entrypoint and
+healthcheck assumed v2, crash-looping the server on a floating rebuild (see
+ADR-0011 correction). `OPENCODE_VERSION` defaults back to the known-good
+`2.2.7`; the npm tools (`CODEGRAPH_VERSION`, `TOKSCALE_VERSION`,
+`WAKATIME_VERSION`, `CLAUDE_CODE_VERSION`) keep floating `latest` behind the
+build smoke test. The entrypoint is additionally version-aware (writes the
+matching v1/v2 permission shape) and the healthcheck probes both
+`/api/info` and `/api/health`, so a future tag drift repairs instead of
+crash-looping.

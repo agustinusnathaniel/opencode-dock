@@ -6,7 +6,11 @@ services:
       args:
         # Single version source per tool: Dockerfile ARG defaults are the
         # fallback, so leaving an env unset still builds.
-        OPENCODE_VERSION: ${OPENCODE_VERSION:-latest}
+        # OPENCODE_VERSION is pinned (not `latest`): the base image's `latest`
+        # tag has pointed at v1 (observed 1.19.6), and a v2-only config
+        # crash-loops a v1 binary. Other tools resolve npm `latest` (smoke
+        # test guards them) and may safely float.
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-2.2.7}
         PNPM_VERSION: ${PNPM_VERSION:-12.21.0}
         YARN_VERSION: ${YARN_VERSION:-4.18.1}
         RTK_VERSION: ${RTK_VERSION:-v1.2.0}
@@ -47,9 +51,12 @@ services:
       # Loopback by default: Docker bypasses UFW.
       - ${OPENCODE_BIND:-127.0.0.1}:4096:4096
     healthcheck:
-      # v2 removed /api/health (404); /api/info returns 200 when authenticated.
-      # $$ escapes to a literal $ for the in-container shell fallback.
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200"]
+      # v1 serves /api/health; v2 removed it (404) and serves /api/info (200
+      # when authenticated). Probe info first, then health, so the check is
+      # correct on either major (a version-pinned rebuild should land on v2,
+      # but a floating tag must never report healthy/unhealthy for the wrong
+      # reason). $$ escapes to a literal $ for the in-container shell.
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200 || curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/health | grep -q 200"]
       interval: 15s
       timeout: 5s
       retries: 2

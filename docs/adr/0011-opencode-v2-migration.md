@@ -135,3 +135,10 @@ silently install latest instead of the pin).
 - ADR-0009: Permission Approval Strategy (v2 amendment appended there)
 - ADR-0010: Session Lifecycle and Background Tasks (v2 `--server` amendment)
 - ADR-0008: Server Mode Strategy (`serve` CMD unchanged and still valid in v2)
+
+## 2026-11 Amendment: latest-by-default (see ADR-0005)
+
+The `2.2.7` default above is now `latest`: `OPENCODE_VERSION` (like
+`CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION`) resolves the
+newest release on every rebuild, and setting it pins a version. The tag
+mechanism itself is unchanged — only the default moved.

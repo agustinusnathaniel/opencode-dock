@@ -4,8 +4,6 @@
 # the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
 # Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
-# Default `latest` tracks upstream: every rebuild pulls the newest base.
-# Pin via OPENCODE_VERSION build arg / env to freeze a version.
 ARG OPENCODE_VERSION=latest
 FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}
 
@@ -27,13 +25,8 @@ RUN adduser -D -s /bin/bash -h /home/opencode opencode \
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Toolchain versions. opencode, codegraph, tokscale, and claude default to
-# `latest`, so a plain `docker build` (or an env that sets none of these)
-# always pulls the newest release; set any `<TOOL>_VERSION` via Coolify env /
-# compose build args to pin (or downgrade) without editing this file.
-# pnpm, yarn, rtk, and wakatime keep known-good pinned defaults. The build
-# smoke test at the bottom executes every binary, so a bad pin fails the
-# build instead of shipping.
+# Toolchain versions (override any via build args; the smoke test below
+# validates every binary, so a bad version fails the build).
 ARG PNPM_VERSION=12.19.0
 ARG YARN_VERSION=4.18.1
 ARG RTK_VERSION=v1.2.0
@@ -69,10 +62,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
 
 # Dev-tool binaries to the system npm prefix. MCP/plugin wiring is
 # home-volume state and is ensured by the entrypoint, not baked here.
-# codegraph, tokscale, and claude resolve `latest` by default (set the
-# corresponding *_VERSION to pin). Claude Code ships musl builds
-# (@anthropic-ai/claude-code-linux-x64-musl), so no wrapper is needed —
-# the build smoke test below proves it by executing the binary.
+# Claude Code ships musl builds, so no wrapper is needed.
 RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 

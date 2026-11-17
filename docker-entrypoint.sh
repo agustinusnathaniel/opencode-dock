@@ -87,15 +87,12 @@ EOF
     fi
 fi
 
-# --- Auto-approve permissions for headless mode (v2 only) ---
+# --- Auto-approve permissions for headless mode (designed for v2) ---
 # v2 uses a `permissions` array (not the v1 `permission` object) with renamed
 # actions: bash->shell, task->subagent, write/patch->edit. doom_loop and lsp
 # are not v2 Core actions; todowrite is the experimental.todo flag.
 # external_directory is allowed by default in v2; listing it keeps headless
 # runs non-interactive even if defaults change.
-# v2-locked by design: v1 is unsupported. The `OPENCODE_VERSION` pin (not
-# `latest`, which has pointed at the v1 line) is the guard against a v1
-# binary receiving this v2-only config.
 CONFIG_FILE="$HOME/.config/opencode/opencode.jsonc"
 mkdir -p "$(dirname "$CONFIG_FILE")"
 node -e '

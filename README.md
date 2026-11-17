@@ -90,10 +90,8 @@ The Docker image ships with these tools pre-installed:
 - **AI coding tools:** Tokscale (`tokscale`, latest), WakaTime plugin (`opencode-wakatime`, latest)
 
 codegraph, claude, tokscale, and wakatime track `latest` by default,
-so every rebuild pulls their newest release. OpenCode itself is pinned to a
-known-good base-image tag (currently `2.3.0`): the base image's `latest` tag
-has pointed at the v1 line (observed `1.19.6`), and a v2-only config
-crash-loops a v1 binary. Pin or bump any of them with a
+so every rebuild pulls their newest release. OpenCode tracks the v2 line
+(currently `2.3.0`). Pin or bump any of them with a
 `<TOOL>_VERSION` environment variable (see `.env.example`) and redeploy — no
 Dockerfile edit needed. pnpm, yarn, and rtk default to known-good pins.
 - **System tools:** procps, xdg-utils
@@ -131,7 +129,7 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
 | `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
-| `OPENCODE_VERSION` | No | OpenCode base-image tag (default `2.3.0`, pinned — `latest` has pointed at v1; set e.g. `2.3.0` to pin or bump). `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION` track npm `latest` by default. |
+| `OPENCODE_VERSION` | No | OpenCode base-image tag (designed for v2, default `2.3.0`). `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION` track npm `latest` by default. |
 
 ## Updating OpenCode
 

@@ -4,9 +4,7 @@
 # the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
 # Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
-# Pinned (not `latest`): the base image's `latest` tag has pointed at the v1
-# line (observed 1.19.6), and a v2-only config crash-loops a v1 binary, so
-# `latest` must never be the default for this arg. Override via build arg to
+# Designed for OpenCode v2: pinned to the v2 line. Override via build arg to
 # bump; the build smoke test fails loudly on a bad pin.
 ARG OPENCODE_VERSION=2.3.0
 # `:-2.3.0` (not just `2.3.0`): Coolify forwards env vars as build args even

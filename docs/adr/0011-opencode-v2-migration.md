@@ -151,13 +151,14 @@ not the v2 line. A rebuild with `OPENCODE_VERSION=latest` (or blank, which
 entrypoint unconditionally wrote the v2 `permissions` array, and the v1
 server exited on start (`V2 permissions are not supported by OpenCode V1`),
 restart-looping with `health: starting` and `/api/info`-only healthcheck
-never passing. Fix: `OPENCODE_VERSION` defaults back to the known-good
-`2.2.7` in Dockerfile/compose/`.env.example` (npm tools keep floating
+never passing. Fix: `OPENCODE_VERSION` defaults to the known-good v2 line
+(currently `2.3.0`; `2.2.7` was the prior verified pin) in
+Dockerfile/compose/`.env.example` (npm tools keep floating
 `latest` behind the smoke test); the entrypoint probes
 `/usr/local/bin/opencode --version` and writes the matching permission shape
 (v1 `permission` object vs v2 `permissions` array, fail-open to v2 on unknown);
 the compose healthcheck probes `/api/info` then `/api/health` so it is
 correct on either major. Recovery on existing hosts: set
-`OPENCODE_VERSION=2.2.7` (or clear it so the pinned default applies) and
+`OPENCODE_VERSION=2.3.0` (or clear it so the pinned default applies) and
 redeploy — no volume wipe needed (the entrypoint repairs the config shape on
 start, preserving MCP/plugin keys).

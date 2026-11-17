@@ -8,11 +8,11 @@
 # line (observed 1.19.6), and a v2-only config crash-loops a v1 binary, so
 # `latest` must never be the default for this arg. Override via build arg to
 # bump; the build smoke test fails loudly on a bad pin.
-ARG OPENCODE_VERSION=2.2.7
-# `:-2.2.7` (not just `2.2.7`): Coolify forwards env vars as build args even
+ARG OPENCODE_VERSION=2.3.0
+# `:-2.3.0` (not just `2.3.0`): Coolify forwards env vars as build args even
 # when blank, and an empty build arg overrides the ARG default — the guard
 # makes blank behave as unset so the default applies.
-FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION:-2.2.7}
+FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION:-2.3.0}
 
 USER root
 

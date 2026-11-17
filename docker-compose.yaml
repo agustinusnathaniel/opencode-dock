@@ -10,7 +10,7 @@ services:
         # tag has pointed at v1 (observed 1.19.6), and a v2-only config
         # crash-loops a v1 binary. Other tools resolve npm `latest` (smoke
         # test guards them) and may safely float.
-        OPENCODE_VERSION: ${OPENCODE_VERSION:-2.2.7}
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-2.3.0}
         PNPM_VERSION: ${PNPM_VERSION:-12.21.0}
         YARN_VERSION: ${YARN_VERSION:-4.18.1}
         RTK_VERSION: ${RTK_VERSION:-v1.2.0}

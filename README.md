@@ -51,7 +51,7 @@ Adjust in Coolify's UI if needed.
 5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`).
 6. Deploy.
 
-Coolify will pull the repo, pull the pinned OpenCode base image (2.2.7 by default) plus the toolchain layers, and start the container. The first build may take a few minutes.
+Coolify will pull the repo, pull the pinned OpenCode base image (2.3.0 by default) plus the toolchain layers, and start the container. The first build may take a few minutes.
 
 ## Deploying with plain Docker (no Coolify)
 
@@ -91,7 +91,7 @@ The Docker image ships with these tools pre-installed:
 
 codegraph, claude, tokscale, and wakatime track `latest` by default,
 so every rebuild pulls their newest release. OpenCode itself is pinned to a
-known-good base-image tag (currently `2.2.7`): the base image's `latest` tag
+known-good base-image tag (currently `2.3.0`): the base image's `latest` tag
 has pointed at the v1 line (observed `1.19.6`), and a v2-only config
 crash-loops a v1 binary. Pin or bump any of them with a
 `<TOOL>_VERSION` environment variable (see `.env.example`) and redeploy — no
@@ -131,7 +131,7 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
 | `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
-| `OPENCODE_VERSION` | No | OpenCode base-image tag (default `2.2.7`, pinned — `latest` has pointed at v1; set e.g. `2.2.7` to pin or bump). `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION` track npm `latest` by default. |
+| `OPENCODE_VERSION` | No | OpenCode base-image tag (default `2.3.0`, pinned — `latest` has pointed at v1; set e.g. `2.3.0` to pin or bump). `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION` track npm `latest` by default. |
 
 ## Updating OpenCode
 

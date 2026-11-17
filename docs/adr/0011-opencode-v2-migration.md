@@ -143,22 +143,19 @@ The `2.2.7` default above is now `latest`: `OPENCODE_VERSION` (like
 newest release on every rebuild, and setting it pins a version. The tag
 mechanism itself is unchanged — only the default moved.
 
-## 2026-11-17 Correction: re-pin `OPENCODE_VERSION`, harden entrypoint/healthcheck
+## 2026-11-17 Correction: re-pin `OPENCODE_VERSION`, lock to v2
 
 `ghcr.io/anomalyco/opencode:latest` was observed resolving to `1.19.6` (v1),
 not the v2 line. A rebuild with `OPENCODE_VERSION=latest` (or blank, which
-`:-latest` maps to `latest`) therefore shipped a v1 binary while the
+`:-latest` mapped to `latest`) therefore shipped a v1 binary while the
 entrypoint unconditionally wrote the v2 `permissions` array, and the v1
 server exited on start (`V2 permissions are not supported by OpenCode V1`),
-restart-looping with `health: starting` and `/api/info`-only healthcheck
-never passing. Fix: `OPENCODE_VERSION` defaults to the known-good v2 line
-(currently `2.3.0`; `2.2.7` was the prior verified pin) in
-Dockerfile/compose/`.env.example` (npm tools keep floating
-`latest` behind the smoke test); the entrypoint probes
-`/usr/local/bin/opencode --version` and writes the matching permission shape
-(v1 `permission` object vs v2 `permissions` array, fail-open to v2 on unknown);
-the compose healthcheck probes `/api/info` then `/api/health` so it is
-correct on either major. Recovery on existing hosts: set
-`OPENCODE_VERSION=2.3.0` (or clear it so the pinned default applies) and
-redeploy — no volume wipe needed (the entrypoint repairs the config shape on
+restart-looping with `health: starting`. Fix: `OPENCODE_VERSION` defaults to
+the v2 line (currently `2.3.0`; `2.2.7` was the prior verified pin) in
+Dockerfile/compose/`.env.example` (npm tools keep floating `latest` behind
+the smoke test). v2-locked by decision: v1 is unsupported, so the entrypoint
+writes the v2 shape only and the healthcheck probes `/api/info` only; the pin
+(not `latest`) is the guard against a v1 binary. Recovery on existing hosts:
+set `OPENCODE_VERSION=2.3.0` (or clear it so the pinned default applies) and
+redeploy — no volume wipe needed (the entrypoint rewrites the config shape on
 start, preserving MCP/plugin keys).

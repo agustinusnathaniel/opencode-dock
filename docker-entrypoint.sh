@@ -87,76 +87,34 @@ EOF
     fi
 fi
 
-# --- Auto-approve permissions for headless mode (version-aware) ---
+# --- Auto-approve permissions for headless mode (v2 only) ---
 # v2 uses a `permissions` array (not the v1 `permission` object) with renamed
 # actions: bash->shell, task->subagent, write/patch->edit. doom_loop and lsp
 # are not v2 Core actions; todowrite is the experimental.todo flag.
 # external_directory is allowed by default in v2; listing it keeps headless
 # runs non-interactive even if defaults change.
-# The base image's `latest` tag has pointed at v1 (observed 1.19.6), and a
-# v2-only config makes a v1 binary exit on start ("V2 permissions are not
-# supported by OpenCode V1"), so never assume the major: probe the image
-# binary and write the matching shape. Unknown version defaults to v2 and
-# leaves any existing v1 key alone (fail-open: never crash-loop on config).
+# v2-locked by design: v1 is unsupported. The `OPENCODE_VERSION` pin (not
+# `latest`, which has pointed at the v1 line) is the guard against a v1
+# binary receiving this v2-only config.
 CONFIG_FILE="$HOME/.config/opencode/opencode.jsonc"
 mkdir -p "$(dirname "$CONFIG_FILE")"
-OPENCODE_BIN="/usr/local/bin/opencode"
-OPENCODE_MAJOR="2"
-OPENCODE_VER_STR=""
-if [ -x "$OPENCODE_BIN" ]; then
-    OPENCODE_VER_STR="$("$OPENCODE_BIN" --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)"
-    case "$OPENCODE_VER_STR" in
-        1.*) OPENCODE_MAJOR="1" ;;
-        2.*) OPENCODE_MAJOR="2" ;;
-        "")
-            echo "WARNING: Could not parse opencode version; assuming v2 config shape." >&2
-            ;;
-        *)
-            echo "WARNING: Unrecognized opencode version '${OPENCODE_VER_STR}'; assuming v2 config shape." >&2
-            OPENCODE_MAJOR="2"
-            ;;
-    esac
-else
-    echo "WARNING: $OPENCODE_BIN not executable; assuming v2 config shape." >&2
-fi
-export OPENCODE_MAJOR
 node -e '
     const fs = require("fs");
     const configFile = process.env.HOME + "/.config/opencode/opencode.jsonc";
-    const major = process.env.OPENCODE_MAJOR || "2";
     let config = {};
     try { config = JSON.parse(fs.readFileSync(configFile, "utf8")); } catch (e) {}
+    const allowAll = [
+        "read", "edit", "glob", "grep", "shell", "subagent",
+        "skill", "question", "webfetch", "websearch",
+        "external_directory", "experimental_image_generate"
+    ].map((action) => ({ action, resource: "*", effect: "allow" }));
     const before = JSON.stringify(config);
-    if (major === "1") {
-        // v1 shape: per-tool `permission` object (see ADR-0009). Remove the
-        // v2-only keys so a v1 binary never sees them.
-        const allowAllV1 = {
-            bash: "allow", read: "allow", edit: "allow",
-            glob: "allow", grep: "allow", list: "allow",
-            task: "allow", external_directory: "allow",
-            todowrite: "allow", question: "allow",
-            webfetch: "allow", websearch: "allow",
-            lsp: "allow", doom_loop: "allow", skill: "allow"
-        };
-        delete config.permissions;
-        config.permission = allowAllV1;
-        if (config.experimental && typeof config.experimental === "object") {
-            delete config.experimental.todo;
-            if (Object.keys(config.experimental).length === 0) delete config.experimental;
-        }
-    } else {
-        const allowAll = [
-            "read", "edit", "glob", "grep", "shell", "subagent",
-            "skill", "question", "webfetch", "websearch",
-            "external_directory", "experimental_image_generate"
-        ].map((action) => ({ action, resource: "*", effect: "allow" }));
-        delete config.permission;
-        config.permissions = allowAll;
-        config.experimental = Object.assign({}, config.experimental, { todo: true });
-    }
+    delete config.permission;
+    config.permissions = allowAll;
+    config.experimental = Object.assign({}, config.experimental, { todo: true });
     if (JSON.stringify(config) !== before) {
         fs.writeFileSync(configFile, JSON.stringify(config, null, 2) + "\n");
-        console.log(`Wrote v${major} permissions (allow) to opencode config`);
+        console.log("Wrote v2 permissions (allow) + experimental.todo to opencode config");
     }
 '
 

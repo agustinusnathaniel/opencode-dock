@@ -51,12 +51,10 @@ services:
       # Loopback by default: Docker bypasses UFW.
       - ${OPENCODE_BIND:-127.0.0.1}:4096:4096
     healthcheck:
-      # v1 serves /api/health; v2 removed it (404) and serves /api/info (200
-      # when authenticated). Probe info first, then health, so the check is
-      # correct on either major (a version-pinned rebuild should land on v2,
-      # but a floating tag must never report healthy/unhealthy for the wrong
-      # reason). $$ escapes to a literal $ for the in-container shell.
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200 || curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/health | grep -q 200"]
+      # v2 removed /api/health (404); /api/info returns 200 when authenticated.
+      # v2-locked: v1 is unsupported, so only the v2 endpoint is probed.
+      # $$ escapes to a literal $ for the in-container shell.
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200"]
       interval: 15s
       timeout: 5s
       retries: 2

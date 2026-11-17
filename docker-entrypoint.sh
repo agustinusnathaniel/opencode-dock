@@ -87,7 +87,7 @@ EOF
     fi
 fi
 
-# --- Auto-approve permissions for headless mode (OpenCode v2 shape) ---
+# --- Auto-approve permissions for headless mode (designed for v2) ---
 # v2 uses a `permissions` array (not the v1 `permission` object) with renamed
 # actions: bash->shell, task->subagent, write/patch->edit. doom_loop and lsp
 # are not v2 Core actions; todowrite is the experimental.todo flag.

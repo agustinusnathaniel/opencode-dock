@@ -4,11 +4,13 @@
 # the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
 # Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
-ARG OPENCODE_VERSION=latest
-# `:-latest` (not just `latest`): Coolify forwards env vars as build args even
+# Designed for OpenCode v2: pinned to the v2 line. Override via build arg to
+# bump; the build smoke test fails loudly on a bad pin.
+ARG OPENCODE_VERSION=2.3.0
+# `:-2.3.0` (not just `2.3.0`): Coolify forwards env vars as build args even
 # when blank, and an empty build arg overrides the ARG default — the guard
 # makes blank behave as unset so the default applies.
-FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION:-latest}
+FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION:-2.3.0}
 
 USER root
 

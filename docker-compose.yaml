@@ -6,7 +6,9 @@ services:
       args:
         # Single version source per tool: Dockerfile ARG defaults are the
         # fallback, so leaving an env unset still builds.
-        OPENCODE_VERSION: ${OPENCODE_VERSION:-latest}
+        # Designed for OpenCode v2: OPENCODE_VERSION tracks the v2 line.
+        # Other tools track npm `latest` (smoke test guards them).
+        OPENCODE_VERSION: ${OPENCODE_VERSION:-2.3.0}
         PNPM_VERSION: ${PNPM_VERSION:-12.21.0}
         YARN_VERSION: ${YARN_VERSION:-4.18.1}
         RTK_VERSION: ${RTK_VERSION:-v1.2.0}
@@ -47,8 +49,8 @@ services:
       # Loopback by default: Docker bypasses UFW.
       - ${OPENCODE_BIND:-127.0.0.1}:4096:4096
     healthcheck:
-      # v2 removed /api/health (404); /api/info returns 200 when authenticated.
-      # $$ escapes to a literal $ for the in-container shell fallback.
+      # Designed for OpenCode v2: /api/info returns 200 when authenticated.
+      # $$ escapes to a literal $ for the in-container shell.
       test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200"]
       interval: 15s
       timeout: 5s

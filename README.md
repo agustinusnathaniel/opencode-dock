@@ -51,7 +51,7 @@ Adjust in Coolify's UI if needed.
 5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`).
 6. Deploy.
 
-Coolify will pull the repo, pull the OpenCode base image (`:latest` by default) plus the toolchain layers, and start the container. The first build may take a few minutes.
+Coolify will pull the repo, pull the pinned OpenCode base image (2.3.0 by default) plus the toolchain layers, and start the container. The first build may take a few minutes.
 
 ## Deploying with plain Docker (no Coolify)
 
@@ -89,8 +89,9 @@ The Docker image ships with these tools pre-installed:
 - **Agent CLIs:** Claude Code (`claude`, latest, musl-compatible) — needs `CLAUDE_CODE_OAUTH_TOKEN` to connect your Claude plan
 - **AI coding tools:** Tokscale (`tokscale`, latest), WakaTime plugin (`opencode-wakatime`, latest)
 
-opencode, codegraph, claude, tokscale, and wakatime track `latest` by default,
-so every rebuild pulls the newest release. Pin any of them with a
+codegraph, claude, tokscale, and wakatime track `latest` by default,
+so every rebuild pulls their newest release. OpenCode tracks the v2 line
+(currently `2.3.0`). Pin or bump any of them with a
 `<TOOL>_VERSION` environment variable (see `.env.example`) and redeploy — no
 Dockerfile edit needed. pnpm, yarn, and rtk default to known-good pins.
 - **System tools:** procps, xdg-utils
@@ -128,12 +129,12 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
 | `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
-| `OPENCODE_VERSION` | No | OpenCode base-image tag (default `latest`; set e.g. `2.2.7` to pin). Same pattern for `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION`. |
+| `OPENCODE_VERSION` | No | OpenCode base-image tag (designed for v2, default `2.3.0`). `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION` track npm `latest` by default. |
 
 ## Updating OpenCode
 
-Rebuilds pull the newest `latest` base plus the newest codegraph, tokscale,
-and claude automatically — just redeploy (`git pull`, then rebuild). To freeze
+Rebuilds keep the pinned OpenCode base (bump `OPENCODE_VERSION` to update)
+while codegraph, tokscale, and claude track their newest `latest` automatically — just redeploy (`git pull`, then rebuild). To freeze
 a version instead, set `OPENCODE_VERSION` (in your `.env` / Coolify env vars)
 to that tag and rebuild; Coolify picks up the change on the next deployment.
 

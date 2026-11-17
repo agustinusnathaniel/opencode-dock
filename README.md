@@ -83,16 +83,16 @@ To update: `git pull`, then `docker compose up -d --build`. Password, provider k
 The Docker image ships with these tools pre-installed:
 
 - **Runtime:** Node.js (Alpine apk), npm
-- **Package managers:** pnpm 12.19.0, yarn 4.18.1 (via Corepack)
+- **Package managers:** pnpm 12.21.0, yarn 4.18.1 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
 - **Code intelligence:** CodeGraph (`codegraph`, latest), Rust Token Killer (`rtk` v1.2.0)
 - **Agent CLIs:** Claude Code (`claude`, latest, musl-compatible) — needs `CLAUDE_CODE_OAUTH_TOKEN` to connect your Claude plan
-- **AI coding tools:** Tokscale (`tokscale`, latest), WakaTime plugin (`opencode-wakatime` 1.4.0)
+- **AI coding tools:** Tokscale (`tokscale`, latest), WakaTime plugin (`opencode-wakatime`, latest)
 
-opencode, codegraph, claude, and tokscale track `latest` by default, so every
-rebuild pulls the newest release. Pin any of them with a `<TOOL>_VERSION`
-environment variable (see `.env.example`) and redeploy — no Dockerfile edit
-needed. pnpm, yarn, rtk, and wakatime default to known-good pins.
+opencode, codegraph, claude, tokscale, and wakatime track `latest` by default,
+so every rebuild pulls the newest release. Pin any of them with a
+`<TOOL>_VERSION` environment variable (see `.env.example`) and redeploy — no
+Dockerfile edit needed. pnpm, yarn, and rtk default to known-good pins.
 - **System tools:** procps, xdg-utils
 
 ## Persistent Volumes

@@ -116,14 +116,17 @@ runs unmodified (covered by the build smoke test). Auth is env-only via
 with a browser); no `ANTHROPIC_API_KEY` is wired, deliberately — an API key
 takes precedence and would bill API usage instead of the Claude plan.
 
-## 2026-11 Note: latest-by-default for opencode/codegraph/tokscale/claude
+## 2026-11 Note: latest-by-default for opencode/codegraph/tokscale/claude/wakatime
 
-`OPENCODE_VERSION`, `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, and
-`CLAUDE_CODE_VERSION` default to `latest`, so every rebuild pulls the newest
-release without a file edit; setting any of them pins that tool
-(e.g. `OPENCODE_VERSION=2.2.7`). pnpm, yarn, rtk, and wakatime keep
-known-good pinned defaults. `pkg@latest` (npm) and the `:latest` base-image
-tag (verified present on GHCR) are the resolution mechanism; the build smoke
-test stays the backstop for a broken newest release. Trade-off accepted:
-rebuilds are no longer byte-reproducible for these four — pin when you need a
-frozen image.
+`OPENCODE_VERSION`, `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`,
+`CLAUDE_CODE_VERSION`, and `WAKATIME_VERSION` default to `latest`, so every
+rebuild pulls the newest release without a file edit; setting any of them
+pins that tool (e.g. `OPENCODE_VERSION=2.2.7`). pnpm and yarn stay pinned but
+track the current line (12.21.0 / 4.18.1 — yarn's pin already equals its
+corepack `latest`); rtk stays pinned because its install script treats any
+set `RTK_VERSION` as a literal tag (`latest` would 404) and its auto-latest
+fallback depends on GitHub API rate limits. `pkg@latest` (npm) and the
+`:latest` base-image tag (verified present on GHCR) are the resolution
+mechanism; the build smoke test stays the backstop for a broken newest
+release. Trade-off accepted: rebuilds are no longer byte-reproducible for
+the floating tools — pin when you need a frozen image.

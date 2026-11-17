@@ -27,12 +27,12 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Toolchain versions (override any via build args; the smoke test below
 # validates every binary, so a bad version fails the build).
-ARG PNPM_VERSION=12.19.0
+ARG PNPM_VERSION=12.21.0
 ARG YARN_VERSION=4.18.1
 ARG RTK_VERSION=v1.2.0
 ARG CODEGRAPH_VERSION=latest
 ARG TOKSCALE_VERSION=latest
-ARG WAKATIME_VERSION=1.4.0
+ARG WAKATIME_VERSION=latest
 ARG CLAUDE_CODE_VERSION=latest
 
 # System toolchain locations (outside the home volume so named volumes can

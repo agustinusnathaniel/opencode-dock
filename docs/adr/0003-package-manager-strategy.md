@@ -70,3 +70,11 @@ itself targets the system prefix (`NPM_CONFIG_PREFIX=/opt/npm-global`), not
 
 - ADR-0002: fnm for Node.js (Corepack ships with Node)
 - ADR-0005: Dev tools strategy (package managers are dev tools)
+
+## Amendment 2026-11-17: pnpm bumped to current line, still pinned
+
+pnpm pin moved 12.19.0 → 12.21.0 (corepack `latest` at the time; verified via
+`corepack prepare pnpm@latest`); yarn's 4.18.1 pin already equals its corepack
+`latest`. Deliberately still pins, not floating `latest`: a future pnpm/yarn
+major could break agent install steps in ways the `--version` smoke test
+cannot catch (see ADR-0005 latest-by-default note).

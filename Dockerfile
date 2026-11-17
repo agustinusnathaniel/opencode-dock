@@ -5,7 +5,10 @@
 # Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
 ARG OPENCODE_VERSION=latest
-FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}
+# `:-latest` (not just `latest`): Coolify forwards env vars as build args even
+# when blank, and an empty build arg overrides the ARG default — the guard
+# makes blank behave as unset so the default applies.
+FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION:-latest}
 
 USER root
 
@@ -49,8 +52,8 @@ ENV PATH=/opt/npm-global/bin:/usr/local/bin:/home/opencode/.opencode/bin:/home/o
 # HOME-adjacent directory that the home volume shadows.
 RUN npm install -g corepack \
     && corepack enable --install-directory /usr/local/bin \
-    && corepack prepare pnpm@${PNPM_VERSION} --activate \
-    && corepack prepare yarn@${YARN_VERSION} --activate \
+    && corepack prepare pnpm@${PNPM_VERSION:-12.21.0} --activate \
+    && corepack prepare yarn@${YARN_VERSION:-4.18.1} --activate \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
 # RTK binary to /usr/local/bin (image layer). The installer defaults to
@@ -63,7 +66,7 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
 # Dev-tool binaries to the system npm prefix. MCP/plugin wiring is
 # home-volume state and is ensured by the entrypoint, not baked here.
 # Claude Code ships musl builds, so no wrapper is needed.
-RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION:-latest} tokscale@${TOKSCALE_VERSION:-latest} opencode-wakatime@${WAKATIME_VERSION:-latest} @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION:-latest} \
     && chown -R opencode:opencode /opt/npm-global /opt/corepack
 
 # CodeGraph's npm launcher execs a vendored glibc-linked Node that cannot run

@@ -129,4 +129,9 @@ fallback depends on GitHub API rate limits. `pkg@latest` (npm) and the
 `:latest` base-image tag (verified present on GHCR) are the resolution
 mechanism; the build smoke test stays the backstop for a broken newest
 release. Trade-off accepted: rebuilds are no longer byte-reproducible for
-the floating tools — pin when you need a frozen image.
+the floating tools — pin when you need a frozen image. Every `latest`-defaulted reference uses `${VAR:-default}`, not a
+bare `${VAR}`: Coolify forwards env vars as build args even when blank (seen
+2026-11-17: an empty `OPENCODE_VERSION` build arg overrode both defaults and
+broke `FROM` with an empty tag), and `:-` makes blank behave as unset. rtk is
+the exception: its installer treats any set `RTK_VERSION` as a literal tag,
+so a blank value intentionally floats to its auto-latest instead of the pin.

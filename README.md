@@ -51,7 +51,7 @@ Adjust in Coolify's UI if needed.
 5. Add the environment variables listed in `.env.example` (at minimum `OPENCODE_PASSWORD` and `OPENCODE_GO_API_KEY`).
 6. Deploy.
 
-Coolify will pull the repo, pull the pinned OpenCode base image plus the toolchain layers, and start the container. The first build may take a few minutes.
+Coolify will pull the repo, pull the OpenCode base image (`:latest` by default) plus the toolchain layers, and start the container. The first build may take a few minutes.
 
 ## Deploying with plain Docker (no Coolify)
 

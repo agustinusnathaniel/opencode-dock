@@ -4,7 +4,9 @@
 # the agent toolchain: git/gh/ssh, Node.js (Alpine apk), pnpm/yarn via
 # Corepack, and the dev tools (codegraph, tokscale, wakatime, rtk, claude).
 # Version pin = image tag (single source; see docker-compose.yaml).
-ARG OPENCODE_VERSION=2.2.7
+# Default `latest` tracks upstream: every rebuild pulls the newest base.
+# Pin via OPENCODE_VERSION build arg / env to freeze a version.
+ARG OPENCODE_VERSION=latest
 FROM ghcr.io/anomalyco/opencode:${OPENCODE_VERSION}
 
 USER root
@@ -25,18 +27,20 @@ RUN adduser -D -s /bin/bash -h /home/opencode opencode \
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Toolchain version pins. Defaults below are the single source of truth, so a
-# plain `docker build` (or an env that sets none of these) still produces the
-# known-good image; override any of them via Coolify env / compose build args
-# to bump without editing this file. The build smoke test at the bottom
-# executes every binary, so a bad pin fails the build instead of shipping.
+# Toolchain versions. opencode, codegraph, tokscale, and claude default to
+# `latest`, so a plain `docker build` (or an env that sets none of these)
+# always pulls the newest release; set any `<TOOL>_VERSION` via Coolify env /
+# compose build args to pin (or downgrade) without editing this file.
+# pnpm, yarn, rtk, and wakatime keep known-good pinned defaults. The build
+# smoke test at the bottom executes every binary, so a bad pin fails the
+# build instead of shipping.
 ARG PNPM_VERSION=12.19.0
 ARG YARN_VERSION=4.18.1
 ARG RTK_VERSION=v1.2.0
-ARG CODEGRAPH_VERSION=1.6.2
-ARG TOKSCALE_VERSION=4.21.0
+ARG CODEGRAPH_VERSION=latest
+ARG TOKSCALE_VERSION=latest
 ARG WAKATIME_VERSION=1.4.0
-ARG CLAUDE_CODE_VERSION=2.1.322
+ARG CLAUDE_CODE_VERSION=latest
 
 # System toolchain locations (outside the home volume so named volumes can
 # never shadow them; see ADR-0006). Runtime `npm install -g` still works for
@@ -65,7 +69,8 @@ RUN curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/in
 
 # Dev-tool binaries to the system npm prefix. MCP/plugin wiring is
 # home-volume state and is ensured by the entrypoint, not baked here.
-# Claude Code is pinned exact like pnpm/yarn; it ships musl builds
+# codegraph, tokscale, and claude resolve `latest` by default (set the
+# corresponding *_VERSION to pin). Claude Code ships musl builds
 # (@anthropic-ai/claude-code-linux-x64-musl), so no wrapper is needed —
 # the build smoke test below proves it by executing the binary.
 RUN npm install -g @colbymchenry/codegraph@${CODEGRAPH_VERSION} tokscale@${TOKSCALE_VERSION} opencode-wakatime@${WAKATIME_VERSION} @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \

@@ -85,13 +85,14 @@ The Docker image ships with these tools pre-installed:
 - **Runtime:** Node.js (Alpine apk), npm
 - **Package managers:** pnpm 12.19.0, yarn 4.18.1 (via Corepack)
 - **Version control:** git, openssh-client, gh CLI
-- **Code intelligence:** CodeGraph (`codegraph` 1.6.2), Rust Token Killer (`rtk` v1.2.0)
-- **Agent CLIs:** Claude Code (`claude`, pinned 2.1.322, musl-compatible) — needs `CLAUDE_CODE_OAUTH_TOKEN` to connect your Claude plan
-- **AI coding tools:** Tokscale (`tokscale` 4.21.0), WakaTime plugin (`opencode-wakatime` 1.4.0)
+- **Code intelligence:** CodeGraph (`codegraph`, latest), Rust Token Killer (`rtk` v1.2.0)
+- **Agent CLIs:** Claude Code (`claude`, latest, musl-compatible) — needs `CLAUDE_CODE_OAUTH_TOKEN` to connect your Claude plan
+- **AI coding tools:** Tokscale (`tokscale`, latest), WakaTime plugin (`opencode-wakatime` 1.4.0)
 
-All versions above are defaults: override any of them with a `<TOOL>_VERSION`
+opencode, codegraph, claude, and tokscale track `latest` by default, so every
+rebuild pulls the newest release. Pin any of them with a `<TOOL>_VERSION`
 environment variable (see `.env.example`) and redeploy — no Dockerfile edit
-needed. Leaving them unset builds the known-good image.
+needed. pnpm, yarn, rtk, and wakatime default to known-good pins.
 - **System tools:** procps, xdg-utils
 
 ## Persistent Volumes
@@ -127,13 +128,14 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 | `GITHUB_TOKEN` | No | GitHub personal access token for `gh` CLI auth. |
 | `WAKATIME_API_KEY` | No | WakaTime API key for coding activity tracking. |
 | `CLAUDE_CODE_OAUTH_TOKEN` | No | Long-lived token from `claude setup-token`; enables Connect Claude Agent with your Claude plan. |
-| `OPENCODE_VERSION` | No | OpenCode version to build (default `2.2.7`). |
+| `OPENCODE_VERSION` | No | OpenCode base-image tag (default `latest`; set e.g. `2.2.7` to pin). Same pattern for `CODEGRAPH_VERSION`, `TOKSCALE_VERSION`, `CLAUDE_CODE_VERSION`. |
 
 ## Updating OpenCode
 
-1. Change `OPENCODE_VERSION` (in your `.env` / Coolify env vars, or the compose
-   build arg default) to the new version
-2. Rebuild: Coolify will pick up the change on the next deployment
+Rebuilds pull the newest `latest` base plus the newest codegraph, tokscale,
+and claude automatically — just redeploy (`git pull`, then rebuild). To freeze
+a version instead, set `OPENCODE_VERSION` (in your `.env` / Coolify env vars)
+to that tag and rebuild; Coolify picks up the change on the next deployment.
 
 ### Upgrading from v1 (very old volumes only)
 

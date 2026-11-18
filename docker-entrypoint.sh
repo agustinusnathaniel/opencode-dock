@@ -5,8 +5,25 @@ set -e
 # --- Server password (OpenCode v2) ---
 # Canonical and only: OPENCODE_PASSWORD. v2 has no OPENCODE_SERVER_USERNAME;
 # the username is always `opencode`.
+# OPENCODE_PASSWORD_FILE (Docker secret style) wins when set: its contents,
+# with trailing newlines stripped, become the password.
+if [ -n "${OPENCODE_PASSWORD_FILE:-}" ]; then
+    if [ ! -r "$OPENCODE_PASSWORD_FILE" ]; then
+        echo "ERROR: OPENCODE_PASSWORD_FILE is set but unreadable: $OPENCODE_PASSWORD_FILE" >&2
+        exit 1
+    fi
+    OPENCODE_PASSWORD="$(tr -d '\r\n' < "$OPENCODE_PASSWORD_FILE")"
+    export OPENCODE_PASSWORD
+fi
 if [ -z "${OPENCODE_PASSWORD:-}" ]; then
-    echo "ERROR: Set OPENCODE_PASSWORD before starting." >&2
+    echo "ERROR: Set OPENCODE_PASSWORD (or OPENCODE_PASSWORD_FILE) before starting." >&2
+    exit 1
+fi
+# A short password is brute-forceable over the network, and the server speaks
+# plain HTTP with no rate limiting — refuse to start instead of running exposed.
+if [ "${#OPENCODE_PASSWORD}" -lt 32 ]; then
+    echo "ERROR: OPENCODE_PASSWORD must be at least 32 characters (got ${#OPENCODE_PASSWORD})." >&2
+    echo "Generate one with: openssl rand -base64 48" >&2
     exit 1
 fi
 

@@ -21,8 +21,12 @@ services:
     environment:
       - NODE_NO_WARNINGS=1
       # v2 canonical password (username is always `opencode`; there is no
-      # OPENCODE_SERVER_USERNAME in v2).
+      # OPENCODE_SERVER_USERNAME in v2). Must be at least 32 characters —
+      # the entrypoint refuses to start otherwise.
       - OPENCODE_PASSWORD=${OPENCODE_PASSWORD:-}
+      # Docker secret style: point at a mounted file holding the password
+      # (takes precedence over OPENCODE_PASSWORD when set).
+      - OPENCODE_PASSWORD_FILE=${OPENCODE_PASSWORD_FILE:-}
       - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY:?error}
       - OPENCODE_ZEN_API_KEY=${OPENCODE_ZEN_API_KEY:-}
       - SSH_PRIVATE_KEY=${SSH_PRIVATE_KEY:-}

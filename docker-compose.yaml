@@ -55,7 +55,10 @@ services:
     healthcheck:
       # Designed for OpenCode v2: /api/info returns 200 when authenticated.
       # $$ escapes to a literal $ for the in-container shell.
-      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$OPENCODE_PASSWORD\" http://localhost:4096/api/info | grep -q 200"]
+      # Mirrors the entrypoint precedence (FILE wins when set): a healthcheck
+      # is a separate exec and cannot see the entrypoint's export, so a
+      # FILE-only deployment would otherwise stay unhealthy forever.
+      test: ["CMD-SHELL", "PW=\"$$OPENCODE_PASSWORD\"; if [ -n \"$$OPENCODE_PASSWORD_FILE\" ] && [ -r \"$$OPENCODE_PASSWORD_FILE\" ]; then PW=\"$$(tr -d '\\r\\n' < \"$$OPENCODE_PASSWORD_FILE\")\"; fi; curl -s -o /dev/null -w '%{http_code}' -u \"opencode:$$PW\" http://localhost:4096/api/info | grep -q 200"]
       interval: 15s
       timeout: 5s
       retries: 2

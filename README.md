@@ -28,7 +28,7 @@ Coolify Proxy (Caddy/Traefik + Let's Encrypt SSL)
 OpenCode Server (port 4096, inside Docker)
   |
   | Entrypoint: /usr/local/bin/docker-entrypoint.sh
-  |  • Adopts OPENCODE_PASSWORD (fails fast when unset)
+  |  • Adopts OPENCODE_PASSWORD (or OPENCODE_PASSWORD_FILE; fails fast when unset or shorter than 32 chars)
   |  • Injects SSH key from SSH_PRIVATE_KEY env var
   |  • Writes provider keys to auth.json (OPENCODE_GO_API_KEY / ZEN_API_KEY)
   |  • Writes native v2 permissions (allow-all for headless) + experimental.todo
@@ -71,6 +71,7 @@ The same compose file runs on any host with Docker Engine and the Compose plugin
 4. Port 4096 binds to `127.0.0.1` by default. Use a reverse proxy for HTTPS or an SSH tunnel (`ssh -L 4096:localhost:4096 <host>`); set `OPENCODE_BIND=0.0.0.0` for LAN access. With Caddy, for example:
    ```
    opencode.yourdomain.com {
+       header Strict-Transport-Security "max-age=31536000"
        reverse_proxy localhost:4096
    }
    ```
@@ -120,7 +121,8 @@ See `.env.example` for the full list with descriptions. The ones you need to car
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `OPENCODE_PASSWORD` | Yes | Password for the web UI and API (v2 canonical name; basic-auth username is always `opencode`). Set a strong one. |
+| `OPENCODE_PASSWORD` | Yes (unless `OPENCODE_PASSWORD_FILE` is set) | Password for the web UI and API (v2 canonical name; basic-auth username is always `opencode`). Must be at least 32 characters — generate with `openssl rand -base64 48`. |
+| `OPENCODE_PASSWORD_FILE` | No | Path to a mounted file holding the password (Docker secret style); takes precedence over `OPENCODE_PASSWORD`. |
 | `OPENCODE_GO_API_KEY` | Yes | API key for the OpenCode Go provider. |
 | `OPENCODE_ZEN_API_KEY` | No | Falls back to `OPENCODE_GO_API_KEY` if not set. Same key works for both. |
 | `SSH_PRIVATE_KEY` | No | Private key for agents to push/pull code. Supports single-line and multi-line formats. |

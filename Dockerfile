@@ -116,6 +116,12 @@ WORKDIR /home/opencode
 
 EXPOSE 4096
 
+# Static OCI labels only: no version label, so a version bump can never leave
+# a stale label behind (the pinned base image tag is the version source).
+LABEL org.opencontainers.image.title="opencode-dock" \
+      org.opencontainers.image.description="OpenCode v2 remote server with agent toolchain (Coolify or plain Docker)" \
+      org.opencontainers.image.source="https://github.com/agustinusnathaniel/opencode-dock"
+
 # No Dockerfile HEALTHCHECK: docker-compose.yaml defines the single healthcheck
 # (compose overrides the image value whenever both exist), so one definition
 # lives there and none can drift.
